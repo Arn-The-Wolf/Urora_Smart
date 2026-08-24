@@ -29,8 +29,13 @@ async function applySchema(exec: (sql: string) => Promise<unknown>) {
   }
 }
 
+function readEnv(name: string) {
+  // Dynamic lookup so Next.js does not inline a missing value at build time.
+  return process.env[name];
+}
+
 async function initDb() {
-  const databaseUrl = process.env.DATABASE_URL;
+  const databaseUrl = readEnv("DATABASE_URL") ?? readEnv("POSTGRES_URL");
 
   if (databaseUrl?.startsWith("postgres")) {
     const sql = neon(databaseUrl);
@@ -43,7 +48,7 @@ async function initDb() {
   }
 
   // Local: persist under ./data. On Vercel without DATABASE_URL: in-memory (demo resets on cold start).
-  const useMemory = Boolean(process.env.VERCEL) && !databaseUrl;
+  const useMemory = Boolean(readEnv("VERCEL")) && !databaseUrl;
   const client = useMemory
     ? new PGlite()
     : (() => {
