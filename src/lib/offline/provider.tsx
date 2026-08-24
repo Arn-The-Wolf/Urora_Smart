@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import type { Cow, CowStatus, Farm, MilkSummary, MilkingRecord, SessionUser, User } from "@/lib/types";
 import { cacheCows, cacheMilkings, enqueue, flushQueue, pendingCount, readCachedCows, readCachedMilkings } from "@/lib/offline/sync";
 import { createId } from "@/lib/id";
@@ -73,7 +74,18 @@ export function FarmDataProvider({
     setSyncing(true);
     setLastError(null);
     try {
-      await flushQueue();
+      const result = await flushQueue();
+      if (result.conflicts?.length) {
+        const milkConflicts = result.conflicts.filter((c) => c.entity === "milking").length;
+        const cowConflicts = result.conflicts.filter((c) => c.entity === "cow").length;
+        const parts = [
+          milkConflicts ? `${milkConflicts} milking` : null,
+          cowConflicts ? `${cowConflicts} cow` : null,
+        ].filter(Boolean);
+        toast.warning(
+          `Sync kept the newer server record for ${parts.join(" and ")} conflict${result.conflicts.length === 1 ? "" : "s"}. Check milkings if two devices logged the same session.`,
+        );
+      }
       const [cowRes, milkRes] = await Promise.all([
         api<{ cows: Cow[] }>("/api/cattle"),
         api<{ milkings: MilkingRecord[] }>("/api/milk"),

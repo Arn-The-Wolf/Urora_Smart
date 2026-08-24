@@ -53,6 +53,8 @@ export async function flushQueue() {
     serverTime: string;
     cows: Cow[];
     milkings: MilkingRecord[];
+    conflicts?: { entity: string; id: string; reason?: string; resolvedId?: string }[];
+    applied?: number;
   };
   if (result.cows.length) await cacheCows(result.cows);
   if (result.milkings.length) await cacheMilkings(result.milkings);

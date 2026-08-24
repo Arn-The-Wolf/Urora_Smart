@@ -24,6 +24,8 @@ export const stockInputSchema = z.object({
   unit: z.string().trim().min(1).max(20),
   quantity: z.coerce.number().min(0),
   reorderLevel: z.coerce.number().min(0).default(0),
+  batchCode: z.preprocess(emptyToNull, z.string().trim().max(60).nullish()),
+  expiresOn: z.preprocess(emptyToNull, z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish()),
   notes: z.preprocess(emptyToNull, z.string().trim().max(240).nullish()),
 });
 

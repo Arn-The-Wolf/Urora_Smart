@@ -118,6 +118,12 @@ export async function seedIfEmpty(db: SeedDb) {
     }
   }
   const demoUser = await db.select().from(users).where(eq(users.email, DEMO_EMAIL)).limit(1);
+  if (demoUser[0] && (demoUser[0].role === "owner" || demoUser[0].role === "herder")) {
+    await db
+      .update(users)
+      .set({ role: demoUser[0].role === "owner" ? "boss" : "operator", updatedAt: nowIso() })
+      .where(eq(users.id, demoUser[0].id));
+  }
   let farmId = demoUser[0]?.farmId;
   let cowIds: { id: string; gender: string; status: string; tagNumber: string }[] = [];
 
@@ -141,7 +147,18 @@ export async function seedIfEmpty(db: SeedDb) {
       email: DEMO_EMAIL,
       passwordHash,
       name: "Jean Uwase",
-      role: "owner",
+      role: "boss",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await db.insert(users).values({
+      id: createId(),
+      farmId,
+      email: "operator@urora.farm",
+      passwordHash,
+      name: "Claudine Mukamana",
+      role: "operator",
       createdAt: now,
       updatedAt: now,
     });
@@ -200,6 +217,23 @@ export async function seedIfEmpty(db: SeedDb) {
   }
 
   await seedOperations(db, farmId, cowIds);
+  await ensureOperatorUser(db, farmId);
+}
+
+async function ensureOperatorUser(db: SeedDb, farmId: string) {
+  const existing = await db.select().from(users).where(eq(users.email, "operator@urora.farm")).limit(1);
+  if (existing[0]) return;
+  const now = nowIso();
+  await db.insert(users).values({
+    id: createId(),
+    farmId,
+    email: "operator@urora.farm",
+    passwordHash: await hashPassword("farm1234"),
+    name: "Claudine Mukamana",
+    role: "operator",
+    createdAt: now,
+    updatedAt: now,
+  });
 }
 
 async function seedOperations(
@@ -221,20 +255,27 @@ async function seedOperations(
   const imena = cowIds.find((cow) => cow.tagNumber === "RW-0208");
 
   const catalog = [
-    { name: "Amitraz 12.5%", category: "acaricide", unit: "L", quantity: 4, reorderLevel: 1, notes: "Tick control. Mix 1:500 in spray water." },
-    { name: "Oxytetracycline 20%", category: "medicine", unit: "vials", quantity: 12, reorderLevel: 4, notes: "Injectable antibiotic." },
-    { name: "Ivermectin", category: "medicine", unit: "bottles", quantity: 6, reorderLevel: 2, notes: "Dewormer / parasite control." },
-    { name: "Salt blocks", category: "salt", unit: "blocks", quantity: 8, reorderLevel: 3, notes: "Lick blocks at the water trough." },
-    { name: "Mineral lick", category: "mineral", unit: "kg", quantity: 25, reorderLevel: 8, notes: "Phosphorus and calcium mix." },
-    { name: "Milking disinfectant", category: "disinfectant", unit: "L", quantity: 5, reorderLevel: 2, notes: "Teat dip after milking." },
-    { name: "Wound spray", category: "medicine", unit: "cans", quantity: 3, reorderLevel: 1, notes: "Cuts and tick wounds." },
+    { name: "Amitraz 12.5%", category: "acaricide", unit: "L", quantity: 4, reorderLevel: 1, batchCode: "AM-0826", expiresOn: addDays(today, 120), notes: "Tick control. Mix 1:500 in spray water." },
+    { name: "Oxytetracycline 20%", category: "medicine", unit: "vials", quantity: 12, reorderLevel: 4, batchCode: "OXY-441", expiresOn: addDays(today, 18), notes: "Injectable antibiotic." },
+    { name: "Ivermectin", category: "medicine", unit: "bottles", quantity: 6, reorderLevel: 2, batchCode: "IVM-119", expiresOn: addDays(today, -5), notes: "Dewormer / parasite control." },
+    { name: "Salt blocks", category: "salt", unit: "blocks", quantity: 8, reorderLevel: 3, batchCode: null, expiresOn: null, notes: "Lick blocks at the water trough." },
+    { name: "Mineral lick", category: "mineral", unit: "kg", quantity: 25, reorderLevel: 8, batchCode: null, expiresOn: null, notes: "Phosphorus and calcium mix." },
+    { name: "Milking disinfectant", category: "disinfectant", unit: "L", quantity: 5, reorderLevel: 2, batchCode: "DIP-77", expiresOn: addDays(today, 60), notes: "Teat dip after milking." },
+    { name: "Wound spray", category: "medicine", unit: "cans", quantity: 3, reorderLevel: 1, batchCode: "WS-09", expiresOn: addDays(today, 200), notes: "Cuts and tick wounds." },
   ] as const;
 
   for (const item of catalog) {
     await db.insert(stockItems).values({
       id: createId(),
       farmId,
-      ...item,
+      name: item.name,
+      category: item.category,
+      unit: item.unit,
+      quantity: item.quantity,
+      reorderLevel: item.reorderLevel,
+      batchCode: item.batchCode,
+      expiresOn: item.expiresOn,
+      notes: item.notes,
       createdAt: now,
       updatedAt: now,
     });

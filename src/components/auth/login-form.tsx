@@ -64,17 +64,30 @@ export function LoginForm() {
       <Button type="submit" disabled={loading} className="h-12 w-full text-base">
         {loading ? "Signing in…" : "Sign in"}
       </Button>
-      <button
-        type="button"
-        className="w-full rounded-2xl bg-accent px-3 py-3 text-left text-sm"
-        onClick={() => {
-          setEmail("farmer@urora.farm");
-          setPassword("farm1234");
-        }}
-      >
-        <span className="font-semibold text-foreground">Try the demo farm</span>
-        <span className="mt-0.5 block text-muted-foreground">farmer@urora.farm · farm1234</span>
-      </button>
+      <div className="grid gap-2">
+        <button
+          type="button"
+          className="w-full rounded-2xl bg-accent px-3 py-3 text-left text-sm"
+          onClick={() => {
+            setEmail("farmer@urora.farm");
+            setPassword("farm1234");
+          }}
+        >
+          <span className="font-semibold text-foreground">Demo · Farm boss</span>
+          <span className="mt-0.5 block text-muted-foreground">farmer@urora.farm · farm1234 · reports</span>
+        </button>
+        <button
+          type="button"
+          className="w-full rounded-2xl border border-border bg-card px-3 py-3 text-left text-sm"
+          onClick={() => {
+            setEmail("operator@urora.farm");
+            setPassword("farm1234");
+          }}
+        >
+          <span className="font-semibold text-foreground">Demo · Farm operator</span>
+          <span className="mt-0.5 block text-muted-foreground">operator@urora.farm · farm1234 · daily ops</span>
+        </button>
+      </div>
       <p className="text-center text-sm text-muted-foreground">
         New farm?{" "}
         <Link href="/register" className="font-semibold text-primary">

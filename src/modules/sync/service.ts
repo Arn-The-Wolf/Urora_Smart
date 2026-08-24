@@ -14,7 +14,7 @@ function isCow(record: Cow | MilkingRecord): record is Cow {
 
 export async function applySync(farmId: string, lastPulledAt: string | null, mutations: SyncMutation[]) {
   let applied = 0;
-  const conflicts: { entity: string; id: string }[] = [];
+  const conflicts: { entity: string; id: string; reason?: string; resolvedId?: string }[] = [];
 
   for (const mutation of mutations) {
     if (mutation.entity === "cow" && isCow(mutation.record)) {
@@ -33,7 +33,14 @@ export async function applySync(farmId: string, lastPulledAt: string | null, mut
           : mutation.record;
       const result = await upsertMilkingFromSync(farmId, record);
       if (result.applied) applied += 1;
-      else conflicts.push({ entity: "milking", id: record.id });
+      if (result.conflict || !result.applied) {
+        conflicts.push({
+          entity: "milking",
+          id: record.id,
+          reason: "reason" in result ? String(result.reason ?? "server_newer") : "server_newer",
+          resolvedId: "current" in result && result.current ? result.current.id : record.id,
+        });
+      }
     }
   }
 

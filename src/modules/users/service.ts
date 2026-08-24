@@ -48,7 +48,7 @@ export async function registerFarm(input: z.infer<typeof registerSchema>) {
     email: parsed.email,
     passwordHash: await hashPassword(parsed.password),
     name: parsed.name,
-    role: "owner",
+    role: "boss",
     createdAt: now,
     updatedAt: now,
   });

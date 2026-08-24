@@ -131,21 +131,64 @@ export async function deleteMilking(farmId: string, id: string) {
 
 export async function upsertMilkingFromSync(farmId: string, record: MilkingRecord) {
   const db = await getDb();
-  const existing = await db
+  const byId = await db
     .select()
     .from(milkingRecords)
     .where(and(eq(milkingRecords.id, record.id), eq(milkingRecords.farmId, farmId)))
     .limit(1);
-  if (existing[0] && existing[0].updatedAt > record.updatedAt) {
-    return { applied: false, current: toRecord(existing[0]) };
+
+  // Natural key: same cow + date + session (active rows only)
+  const byNatural = await db
+    .select()
+    .from(milkingRecords)
+    .where(
+      and(
+        eq(milkingRecords.farmId, farmId),
+        eq(milkingRecords.cowId, record.cowId),
+        eq(milkingRecords.date, record.date),
+        eq(milkingRecords.session, record.session),
+        isNull(milkingRecords.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  const existing = byId[0] ?? byNatural[0];
+  if (existing && existing.updatedAt > record.updatedAt) {
+    return {
+      applied: false,
+      conflict: true,
+      reason: "server_newer",
+      current: toRecord(existing),
+    };
   }
+
   const row = { ...record, farmId };
-  if (existing[0]) {
+
+  if (byId[0]) {
     await db.update(milkingRecords).set(row).where(eq(milkingRecords.id, record.id));
-  } else {
-    await db.insert(milkingRecords).values(row);
+    return { applied: true, conflict: false, current: row };
   }
-  return { applied: true, current: row };
+
+  if (byNatural[0] && byNatural[0].id !== record.id) {
+    // Two offline devices logged the same session with different ids — keep newer values on the existing row.
+    const merged = {
+      ...row,
+      id: byNatural[0].id,
+      clientId: byNatural[0].clientId,
+      createdAt: byNatural[0].createdAt,
+    };
+    await db.update(milkingRecords).set(merged).where(eq(milkingRecords.id, byNatural[0].id));
+    return {
+      applied: true,
+      conflict: true,
+      reason: "merged_natural_key",
+      current: merged,
+      supersededId: record.id,
+    };
+  }
+
+  await db.insert(milkingRecords).values(row);
+  return { applied: true, conflict: false, current: row };
 }
 
 export async function listMilkingsChangedSince(farmId: string, since: string | null) {

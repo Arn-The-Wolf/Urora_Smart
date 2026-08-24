@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { stockItems, stockMovements } from "@/modules/inventory/schema";
 import { getDb } from "@/lib/db";
-import { nowIso, todayInKigali } from "@/lib/dates";
+import { addDays, nowIso, todayInKigali } from "@/lib/dates";
 import { createId } from "@/lib/id";
 import type { StockCategory, StockItem } from "@/lib/types";
 import { stockInputSchema, stockMoveSchema } from "@/modules/ops/validators";
@@ -15,6 +15,8 @@ function toItem(row: typeof stockItems.$inferSelect): StockItem {
     unit: row.unit,
     quantity: Number(row.quantity),
     reorderLevel: Number(row.reorderLevel),
+    batchCode: row.batchCode ?? null,
+    expiresOn: row.expiresOn ?? null,
     notes: row.notes,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -32,6 +34,19 @@ export async function listLowStock(farmId: string) {
   return items.filter((item) => item.quantity <= item.reorderLevel);
 }
 
+export async function listExpiringStock(farmId: string, withinDays = 30) {
+  const today = todayInKigali();
+  const until = addDays(today, withinDays);
+  const items = await listStock(farmId);
+  return items.filter((item) => item.expiresOn && item.expiresOn <= until && item.quantity > 0);
+}
+
+export async function listExpiredStock(farmId: string) {
+  const today = todayInKigali();
+  const items = await listStock(farmId);
+  return items.filter((item) => item.expiresOn && item.expiresOn < today && item.quantity > 0);
+}
+
 export async function createStock(farmId: string, input: unknown) {
   const parsed = stockInputSchema.parse(input);
   const db = await getDb();
@@ -44,6 +59,8 @@ export async function createStock(farmId: string, input: unknown) {
     unit: parsed.unit,
     quantity: parsed.quantity,
     reorderLevel: parsed.reorderLevel,
+    batchCode: parsed.batchCode ?? null,
+    expiresOn: parsed.expiresOn ?? null,
     notes: parsed.notes ?? null,
     createdAt: now,
     updatedAt: now,
@@ -91,4 +108,10 @@ export async function useNamedStock(farmId: string, name: string, quantity: numb
   } catch {
     /* keep the health/wash record even if stock is already empty */
   }
+}
+
+export async function countStockMovementsOut(farmId: string, from: string, to: string) {
+  const db = await getDb();
+  const rows = await db.select().from(stockMovements).where(eq(stockMovements.farmId, farmId));
+  return rows.filter((row) => row.kind === "out" && row.date >= from && row.date <= to).length;
 }

@@ -30,7 +30,10 @@ export async function listWashes(farmId: string) {
 
 export async function nextWashDue(farmId: string) {
   const rows = await listWashes(farmId);
-  return rows.find((row) => row.nextDue)?.nextDue ?? null;
+  const dated = rows
+    .filter((row) => row.nextDue)
+    .sort((a, b) => (a.nextDue! > b.nextDue! ? 1 : -1));
+  return dated[0] ?? null;
 }
 
 export async function createWash(farmId: string, input: unknown) {

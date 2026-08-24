@@ -11,6 +11,8 @@ export const stockItems = pgTable("stock_items", {
   unit: text("unit").notNull(),
   quantity: doublePrecision("quantity").notNull(),
   reorderLevel: doublePrecision("reorder_level").notNull().default(0),
+  batchCode: text("batch_code"),
+  expiresOn: text("expires_on"),
   notes: text("notes"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),

@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { StockItem } from "@/lib/types";
-import { todayInKigali } from "@/lib/dates";
+import { addDays, todayInKigali } from "@/lib/dates";
 
 const categories = [
   ["medicine", "Veterinary medicine"],
@@ -26,13 +26,29 @@ const categories = [
   ["other", "Other"],
 ] as const;
 
+function stockBadges(item: StockItem, today: string, until: string) {
+  const badges: { label: string; variant?: "secondary" | "destructive" | "outline" }[] = [];
+  if (item.quantity <= item.reorderLevel) {
+    badges.push({ label: item.quantity <= 0 ? "Out" : "Reorder", variant: "secondary" });
+  }
+  if (item.expiresOn && item.expiresOn < today && item.quantity > 0) {
+    badges.push({ label: "Expired", variant: "destructive" });
+  } else if (item.expiresOn && item.expiresOn <= until && item.quantity > 0) {
+    badges.push({ label: "Expiring", variant: "outline" });
+  }
+  return badges;
+}
+
 export function StockView({ items }: { items: StockItem[] }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [moving, setMoving] = useState<{ item: StockItem; kind: "in" | "out" } | null>(null);
   const [qty, setQty] = useState("1");
   const [reason, setReason] = useState("");
+  const today = todayInKigali();
+  const until = addDays(today, 30);
   const low = items.filter((item) => item.quantity <= item.reorderLevel);
+  const expired = items.filter((item) => item.expiresOn && item.expiresOn < today && item.quantity > 0);
 
   async function addItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -102,9 +118,14 @@ export function StockView({ items }: { items: StockItem[] }) {
           <span className="ml-2 rounded-full bg-[#faefd9] px-2 py-0.5 text-xs text-[#ad7731]">
             {low.length} low
           </span>
+          {expired.length ? (
+            <span className="ml-2 rounded-full bg-[#f9e3df] px-2 py-0.5 text-xs text-[#a95343]">
+              {expired.length} expired
+            </span>
+          ) : null}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Keep oxytetracycline, ivermectin, amitraz, salt blocks, and teat dip where you can count them.
+          Reorder alerts fire at the threshold — before stock hits zero. Track batch and expiry on medicines and disinfectants.
         </p>
       </div>
 
@@ -133,53 +154,69 @@ export function StockView({ items }: { items: StockItem[] }) {
         <Field label="Reorder when at">
           <Input name="reorderLevel" type="number" step="0.1" defaultValue="2" className="h-12 bg-input" />
         </Field>
+        <Field label="Batch / lot code">
+          <Input name="batchCode" placeholder="Optional · e.g. LOT-2408" className="h-12 bg-input" />
+        </Field>
+        <Field label="Expiry date">
+          <Input name="expiresOn" type="date" className="h-12 bg-input" />
+        </Field>
         <Button type="submit" disabled={saving} className="h-11 self-end">
           {saving ? "Saving…" : "Add to store"}
         </Button>
       </form>
 
       <div className="overflow-hidden rounded-[15px] border border-border bg-card">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex flex-wrap items-center justify-between gap-3 border-t border-[#edf1ed] px-4 py-3 first:border-t-0"
-          >
-            <div>
-              <b className="block text-sm">{item.name}</b>
-              <p className="text-xs text-muted-foreground">
-                {item.category.replace("_", " ")} · {item.notes || item.unit}
-              </p>
+        {items.map((item) => {
+          const badges = stockBadges(item, today, until);
+          return (
+            <div
+              key={item.id}
+              className="flex flex-wrap items-center justify-between gap-3 border-t border-[#edf1ed] px-4 py-3 first:border-t-0"
+            >
+              <div>
+                <b className="block text-sm">{item.name}</b>
+                <p className="text-xs text-muted-foreground">
+                  {item.category.replace("_", " ")}
+                  {item.batchCode ? ` · batch ${item.batchCode}` : ""}
+                  {item.expiresOn ? ` · expires ${item.expiresOn}` : ""}
+                  {!item.batchCode && !item.expiresOn ? ` · ${item.notes || item.unit}` : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <strong>
+                  {item.quantity} {item.unit}
+                </strong>
+                {badges.map((badge) => (
+                  <Badge key={badge.label} variant={badge.variant ?? "secondary"}>
+                    {badge.label}
+                  </Badge>
+                ))}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setMoving({ item, kind: "in" });
+                    setQty("1");
+                    setReason("Purchase / restock");
+                  }}
+                >
+                  In
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setMoving({ item, kind: "out" });
+                    setQty("1");
+                    setReason("Used on farm");
+                  }}
+                >
+                  Out
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <strong>
-                {item.quantity} {item.unit}
-              </strong>
-              {item.quantity <= item.reorderLevel ? <Badge variant="secondary">Reorder</Badge> : null}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setMoving({ item, kind: "in" });
-                  setQty("1");
-                  setReason("Purchase / restock");
-                }}
-              >
-                In
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setMoving({ item, kind: "out" });
-                  setQty("1");
-                  setReason("Used on farm");
-                }}
-              >
-                Out
-              </Button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {items.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">Store is empty — add the first item.</p>
         ) : null}

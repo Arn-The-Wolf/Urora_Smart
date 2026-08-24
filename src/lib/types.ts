@@ -1,9 +1,30 @@
 export type CowStatus = "active" | "sold" | "dead";
 export type Gender = "female" | "male";
 export type MilkSession = "morning" | "midday" | "evening";
-export type UserRole = "owner" | "herder";
+export type UserRole = "boss" | "operator";
 export type SyncEntity = "cow" | "milking";
 export type SyncOp = "upsert" | "delete";
+
+export type FarmAlertSeverity = "critical" | "warning" | "info";
+export type FarmAlertKind =
+  | "stock_low"
+  | "stock_expired"
+  | "stock_expiring"
+  | "sick_cow"
+  | "wash_due"
+  | "task_overdue"
+  | "milk_drop"
+  | "milk_missing";
+
+export type FarmAlert = {
+  id: string;
+  kind: FarmAlertKind;
+  severity: FarmAlertSeverity;
+  title: string;
+  detail: string;
+  href: string;
+  createdAt: string;
+};
 
 export type Farm = {
   id: string;
@@ -105,9 +126,36 @@ export type StockItem = {
   unit: string;
   quantity: number;
   reorderLevel: number;
+  batchCode: string | null;
+  expiresOn: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type DailyReport = {
+  date: string;
+  milkLiters: number;
+  sessionsLogged: number;
+  activeCows: number;
+  sickCows: number;
+  lowStockCount: number;
+  expiredStockCount: number;
+  openTasks: number;
+  washDue: string | null;
+  topCow: { tagNumber: string; name: string | null; liters: number } | null;
+};
+
+export type MonthlyReport = {
+  month: string;
+  milkLiters: number;
+  milkingDays: number;
+  averageDailyLiters: number;
+  activeCows: number;
+  healthEvents: number;
+  washesDone: number;
+  stockMovementsOut: number;
+  byDay: { date: string; liters: number }[];
 };
 
 export type WashMethod = "spray" | "dip" | "hand_wash" | "footbath";

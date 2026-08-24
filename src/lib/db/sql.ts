@@ -12,7 +12,7 @@ export const SCHEMA_STATEMENTS = [
       email TEXT NOT NULL,
       password_hash TEXT NOT NULL,
       name TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'owner',
+      role TEXT NOT NULL DEFAULT 'boss',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     )`,
@@ -79,10 +79,14 @@ export const SCHEMA_STATEMENTS = [
       unit TEXT NOT NULL,
       quantity DOUBLE PRECISION NOT NULL,
       reorder_level DOUBLE PRECISION NOT NULL DEFAULT 0,
+      batch_code TEXT,
+      expires_on TEXT,
       notes TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     )`,
+  `ALTER TABLE stock_items ADD COLUMN IF NOT EXISTS batch_code TEXT`,
+  `ALTER TABLE stock_items ADD COLUMN IF NOT EXISTS expires_on TEXT`,
   `CREATE TABLE IF NOT EXISTS stock_movements (
       id TEXT PRIMARY KEY,
       farm_id TEXT NOT NULL REFERENCES farms(id),

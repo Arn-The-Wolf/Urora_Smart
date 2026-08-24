@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db";
 import { nowIso } from "@/lib/dates";
 import { createId } from "@/lib/id";
 import type { Farm, SessionUser, User, UserRole } from "@/lib/types";
+import { normalizeRole } from "@/lib/roles";
 
 export const SESSION_COOKIE = "urora_session";
 const SESSION_DAYS = 30;
@@ -16,7 +17,7 @@ function toUser(row: typeof users.$inferSelect): User {
     farmId: row.farmId,
     email: row.email,
     name: row.name,
-    role: row.role as UserRole,
+    role: normalizeRole(row.role),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -81,6 +82,16 @@ export async function requireSession(): Promise<SessionUser> {
   if (!session) {
     const error = new Error("Unauthorized");
     error.name = "UnauthorizedError";
+    throw error;
+  }
+  return session;
+}
+
+export async function requireRole(...roles: UserRole[]): Promise<SessionUser> {
+  const session = await requireSession();
+  if (!roles.includes(session.user.role)) {
+    const error = new Error("You do not have permission for this action");
+    error.name = "ForbiddenError";
     throw error;
   }
   return session;

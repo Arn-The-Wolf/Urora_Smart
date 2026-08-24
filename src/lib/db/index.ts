@@ -19,7 +19,13 @@ const globalForDb = globalThis as unknown as { __uroraDb?: GlobalDb };
 
 async function applySchema(exec: (sql: string) => Promise<unknown>) {
   for (const statement of SCHEMA_STATEMENTS) {
-    await exec(statement);
+    try {
+      await exec(statement);
+    } catch (error) {
+      // Older DBs may already have columns; ignore duplicate/alter noise.
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/already exists|duplicate column/i.test(message)) throw error;
+    }
   }
 }
 
