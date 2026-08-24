@@ -36,9 +36,15 @@ async function initDb() {
     return db;
   }
 
-  const dataDir = path.join(process.cwd(), "data");
-  mkdirSync(dataDir, { recursive: true });
-  const client = new PGlite(path.join(dataDir, "pglite"));
+  // Local: persist under ./data. On Vercel without DATABASE_URL: in-memory (demo resets on cold start).
+  const useMemory = Boolean(process.env.VERCEL) && !databaseUrl;
+  const client = useMemory
+    ? new PGlite()
+    : (() => {
+        const dataDir = path.join(process.cwd(), "data");
+        mkdirSync(dataDir, { recursive: true });
+        return new PGlite(path.join(dataDir, "pglite"));
+      })();
   await client.waitReady;
   await applySchema(async (statement) => {
     await client.exec(statement);
