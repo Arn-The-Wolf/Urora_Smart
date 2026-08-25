@@ -7,6 +7,7 @@ import { createId } from "@/lib/id";
 import type { MilkSession, MilkSummary, MilkingRecord } from "@/lib/types";
 import { milkingInputSchema, type MilkingInput } from "@/modules/milk/validators";
 import { getCow } from "@/modules/cattle/service";
+import { getCowWithholdUntil } from "@/modules/health/service";
 
 function toRecord(row: typeof milkingRecords.$inferSelect): MilkingRecord {
   return {
@@ -61,6 +62,13 @@ export async function createMilking(farmId: string, input: MilkingInput) {
   if (!cow) throw new Error("Cow not found");
   if (cow.gender !== "female") throw new Error("Milking records are only for female cows");
   if (cow.status !== "active") throw new Error("This cow is not active");
+
+  const withholdUntil = await getCowWithholdUntil(farmId, parsed.cowId, parsed.date);
+  if (withholdUntil) {
+    throw new Error(
+      `Milk withhold active until ${withholdUntil} — do not put this cow's milk in the can (antibiotic / medicine withdrawal).`,
+    );
+  }
 
   const db = await getDb();
   const duplicate = await db

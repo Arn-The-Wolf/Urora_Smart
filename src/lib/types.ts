@@ -1,20 +1,24 @@
 export type CowStatus = "active" | "sold" | "dead";
 export type Gender = "female" | "male";
 export type MilkSession = "morning" | "midday" | "evening";
-export type UserRole = "boss" | "operator";
-export type SyncEntity = "cow" | "milking";
+export type UserRole = "owner" | "operator";
+export type SyncEntity = "cow" | "milking" | "health" | "stock" | "wash";
 export type SyncOp = "upsert" | "delete";
 
 export type FarmAlertSeverity = "critical" | "warning" | "info";
 export type FarmAlertKind =
-  | "stock_low"
-  | "stock_expired"
-  | "stock_expiring"
-  | "sick_cow"
-  | "wash_due"
-  | "task_overdue"
-  | "milk_drop"
-  | "milk_missing";
+    | "stock_low"
+    | "stock_expired"
+    | "stock_expiring"
+    | "sick_cow"
+    | "wash_due"
+    | "task_overdue"
+    | "milk_drop"
+    | "milk_missing"
+    | "milk_withhold"
+    | "breeding_due"
+    | "dry_off_due"
+    | "calving_due";
 
 export type FarmAlert = {
   id: string;
@@ -30,6 +34,8 @@ export type Farm = {
   id: string;
   name: string;
   location: string | null;
+  digestPhone: string | null;
+  digestChannel: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -55,6 +61,8 @@ export type Cow = {
   birthDate: string | null;
   motherTag: string | null;
   status: CowStatus;
+  kraalId: string | null;
+  photoUrl: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -83,7 +91,8 @@ export type SessionUser = {
 export type SyncMutation = {
   entity: SyncEntity;
   op: SyncOp;
-  record: Cow | MilkingRecord;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  record: any;
 };
 
 export type MilkSummary = {
@@ -111,12 +120,87 @@ export type HealthEvent = {
   treatment: string | null;
   medicineName: string | null;
   isolated: boolean;
+  milkWithholdUntil: string | null;
+  photoUrl: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
-export type StockCategory = "medicine" | "salt" | "mineral" | "acaricide" | "disinfectant" | "feed_supplement" | "other";
+export type BreedingKind = "heat" | "ai" | "natural_service" | "pregnancy_check" | "calving" | "dry_off";
+export type BreedingStatus = "recorded" | "confirmed" | "failed" | "completed";
+
+export type BreedingEvent = {
+  id: string;
+  farmId: string;
+  cowId: string;
+  date: string;
+  kind: BreedingKind;
+  status: BreedingStatus;
+  sireTag: string | null;
+  expectedCalving: string | null;
+  dryOffDate: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ExpenseCategory =
+  | "feed"
+  | "medicine"
+  | "vet"
+  | "labor"
+  | "transport"
+  | "equipment"
+  | "utilities"
+  | "other";
+
+export type Expense = {
+  id: string;
+  farmId: string;
+  date: string;
+  category: ExpenseCategory;
+  amount: number;
+  vendor: string | null;
+  notes: string | null;
+  recordedBy: string | null;
+  createdAt: string;
+};
+
+export type MilkSale = {
+  id: string;
+  farmId: string;
+  date: string;
+  liters: number;
+  pricePerLiter: number;
+  totalAmount: number;
+  buyer: string | null;
+  notes: string | null;
+  recordedBy: string | null;
+  createdAt: string;
+};
+
+export type ActivityLogEntry = {
+  id: string;
+  farmId: string;
+  userId: string | null;
+  userName: string | null;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  detail: string | null;
+  createdAt: string;
+};
+
+export type StockCategory =
+  | "medicine"
+  | "salt"
+  | "mineral"
+  | "acaricide"
+  | "disinfectant"
+  | "feed"
+  | "feed_supplement"
+  | "other";
 
 export type StockItem = {
   id: string;

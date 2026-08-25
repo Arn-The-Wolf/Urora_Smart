@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { healthEvents } from "@/modules/health/schema";
 import { getDb } from "@/lib/db";
-import { nowIso } from "@/lib/dates";
+import { nowIso, todayInKigali } from "@/lib/dates";
 import { createId } from "@/lib/id";
 import type { HealthEvent, HealthKind, HealthStatus } from "@/lib/types";
 import { healthInputSchema } from "@/modules/ops/validators";
@@ -19,6 +19,8 @@ function toEvent(row: typeof healthEvents.$inferSelect): HealthEvent {
     treatment: row.treatment,
     medicineName: row.medicineName,
     isolated: row.isolated === 1,
+    milkWithholdUntil: row.milkWithholdUntil ?? null,
+    photoUrl: row.photoUrl ?? null,
     notes: row.notes,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -36,6 +38,27 @@ export async function listSickAnimals(farmId: string) {
   return rows.filter((row) => row.kind === "illness" && (row.status === "open" || row.status === "recovering"));
 }
 
+/** Active milk withhold rows: treatment date still within the withhold window. */
+export async function listActiveWithholds(farmId: string, onDate = todayInKigali()) {
+  const rows = await listHealth(farmId);
+  return rows.filter(
+    (row) =>
+      row.milkWithholdUntil &&
+      row.milkWithholdUntil >= onDate &&
+      row.status !== "resolved" &&
+      row.status !== "completed",
+  );
+}
+
+export async function getCowWithholdUntil(farmId: string, cowId: string, onDate = todayInKigali()) {
+  const active = (await listActiveWithholds(farmId, onDate)).filter((row) => row.cowId === cowId);
+  if (!active.length) return null;
+  return active.reduce((latest, row) => {
+    if (!latest || (row.milkWithholdUntil && row.milkWithholdUntil > latest)) return row.milkWithholdUntil;
+    return latest;
+  }, null as string | null);
+}
+
 export async function createHealth(farmId: string, input: unknown) {
   const parsed = healthInputSchema.parse(input);
   const db = await getDb();
@@ -51,6 +74,8 @@ export async function createHealth(farmId: string, input: unknown) {
     treatment: parsed.treatment ?? null,
     medicineName: parsed.medicineName ?? null,
     isolated: parsed.isolated ? 1 : 0,
+    milkWithholdUntil: parsed.milkWithholdUntil ?? null,
+    photoUrl: parsed.photoUrl ?? null,
     notes: parsed.notes ?? null,
     createdAt: now,
     updatedAt: now,

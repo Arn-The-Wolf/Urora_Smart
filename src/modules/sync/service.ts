@@ -1,4 +1,4 @@
-import type { Cow, MilkingRecord, SyncMutation } from "@/lib/types";
+import type { Cow, HealthEvent, MilkingRecord, StockItem, SyncMutation, WashRecord } from "@/lib/types";
 import {
   listCowsChangedSince,
   upsertCowFromSync,
@@ -7,9 +7,16 @@ import {
   listMilkingsChangedSince,
   upsertMilkingFromSync,
 } from "@/modules/milk/service";
+import { createHealth } from "@/modules/health/service";
+import { createStock } from "@/modules/inventory/service";
+import { createWash } from "@/modules/wash/service";
 
-function isCow(record: Cow | MilkingRecord): record is Cow {
-  return "tagNumber" in record;
+function isCow(record: unknown): record is Cow {
+  return Boolean(record && typeof record === "object" && "tagNumber" in record);
+}
+
+function isMilking(record: unknown): record is MilkingRecord {
+  return Boolean(record && typeof record === "object" && "liters" in record && "session" in record);
 }
 
 export async function applySync(farmId: string, lastPulledAt: string | null, mutations: SyncMutation[]) {
@@ -26,7 +33,7 @@ export async function applySync(farmId: string, lastPulledAt: string | null, mut
       if (result.applied) applied += 1;
       else conflicts.push({ entity: "cow", id: record.id });
     }
-    if (mutation.entity === "milking" && !isCow(mutation.record)) {
+    if (mutation.entity === "milking" && isMilking(mutation.record)) {
       const record =
         mutation.op === "delete"
           ? { ...mutation.record, deletedAt: mutation.record.deletedAt ?? mutation.record.updatedAt }
@@ -40,6 +47,30 @@ export async function applySync(farmId: string, lastPulledAt: string | null, mut
           reason: "reason" in result ? String(result.reason ?? "server_newer") : "server_newer",
           resolvedId: "current" in result && result.current ? result.current.id : record.id,
         });
+      }
+    }
+    if (mutation.entity === "health" && mutation.op === "upsert") {
+      try {
+        await createHealth(farmId, mutation.record as Partial<HealthEvent>);
+        applied += 1;
+      } catch {
+        conflicts.push({ entity: "health", id: String((mutation.record as { id?: string })?.id ?? "unknown"), reason: "apply_failed" });
+      }
+    }
+    if (mutation.entity === "stock" && mutation.op === "upsert") {
+      try {
+        await createStock(farmId, mutation.record as Partial<StockItem>);
+        applied += 1;
+      } catch {
+        conflicts.push({ entity: "stock", id: String((mutation.record as { id?: string })?.id ?? "unknown"), reason: "apply_failed" });
+      }
+    }
+    if (mutation.entity === "wash" && mutation.op === "upsert") {
+      try {
+        await createWash(farmId, mutation.record as Partial<WashRecord>);
+        applied += 1;
+      } catch {
+        conflicts.push({ entity: "wash", id: String((mutation.record as { id?: string })?.id ?? "unknown"), reason: "apply_failed" });
       }
     }
   }

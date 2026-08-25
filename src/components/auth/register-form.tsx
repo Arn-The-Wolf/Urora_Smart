@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/auth/password-input";
 import { Field } from "@/components/forms/field";
 
 export function RegisterForm() {
@@ -55,7 +56,7 @@ export function RegisterForm() {
         <Input id="email" name="email" type="email" required className="h-12" placeholder="you@farm.rw" />
       </Field>
       <Field label="Password" htmlFor="password">
-        <Input id="password" name="password" type="password" required minLength={8} className="h-12" />
+        <PasswordInput id="password" name="password" required minLength={8} />
       </Field>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" disabled={loading} className="h-12 w-full text-base">

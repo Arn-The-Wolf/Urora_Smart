@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/auth/password-input";
 import { Field } from "@/components/forms/field";
 
 export function LoginForm() {
@@ -50,14 +51,12 @@ export function LoginForm() {
         />
       </Field>
       <Field label="Password" htmlFor="password">
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="current-password"
           required
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="h-12"
         />
       </Field>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -73,7 +72,7 @@ export function LoginForm() {
             setPassword("farm1234");
           }}
         >
-          <span className="font-semibold text-foreground">Demo · Farm boss</span>
+          <span className="font-semibold text-foreground">Demo · Farm owner</span>
           <span className="mt-0.5 block text-muted-foreground">farmer@urora.farm · farm1234 · reports</span>
         </button>
         <button

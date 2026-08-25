@@ -15,12 +15,41 @@ export const healthInputSchema = z.object({
   treatment: z.preprocess(emptyToNull, z.string().trim().max(240).nullish()),
   medicineName: z.preprocess(emptyToNull, z.string().trim().max(120).nullish()),
   isolated: z.coerce.boolean().optional(),
+  milkWithholdUntil: z.preprocess(emptyToNull, z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish()),
+  photoUrl: z.preprocess(emptyToNull, z.string().trim().max(700_000).nullish()),
   notes: z.preprocess(emptyToNull, z.string().trim().max(500).nullish()),
+});
+
+export const breedingInputSchema = z.object({
+  cowId: z.string().min(1, "Choose an animal"),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  kind: z.enum(["heat", "ai", "natural_service", "pregnancy_check", "calving", "dry_off"]),
+  status: z.enum(["recorded", "confirmed", "failed", "completed"]).default("recorded"),
+  sireTag: z.preprocess(emptyToNull, z.string().trim().max(40).nullish()),
+  expectedCalving: z.preprocess(emptyToNull, z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish()),
+  dryOffDate: z.preprocess(emptyToNull, z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish()),
+  notes: z.preprocess(emptyToNull, z.string().trim().max(400).nullish()),
+});
+
+export const expenseInputSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  category: z.enum(["feed", "medicine", "vet", "labor", "transport", "equipment", "utilities", "other"]),
+  amount: z.coerce.number().positive(),
+  vendor: z.preprocess(emptyToNull, z.string().trim().max(120).nullish()),
+  notes: z.preprocess(emptyToNull, z.string().trim().max(400).nullish()),
+});
+
+export const milkSaleInputSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  liters: z.coerce.number().positive().max(5000),
+  pricePerLiter: z.coerce.number().positive().max(10000),
+  buyer: z.preprocess(emptyToNull, z.string().trim().max(120).nullish()),
+  notes: z.preprocess(emptyToNull, z.string().trim().max(400).nullish()),
 });
 
 export const stockInputSchema = z.object({
   name: z.string().trim().min(1).max(80),
-  category: z.enum(["medicine", "salt", "mineral", "acaricide", "disinfectant", "feed_supplement", "other"]),
+  category: z.enum(["medicine", "salt", "mineral", "acaricide", "disinfectant", "feed", "feed_supplement", "other"]),
   unit: z.string().trim().min(1).max(20),
   quantity: z.coerce.number().min(0),
   reorderLevel: z.coerce.number().min(0).default(0),

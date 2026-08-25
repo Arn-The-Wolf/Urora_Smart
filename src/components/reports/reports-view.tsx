@@ -41,7 +41,7 @@ export function ReportsView() {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">BOSS VIEW</p>
+        <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">OWNER VIEW</p>
         <h1 className="text-[28px] tracking-[-1px]">Farm reports</h1>
         <p className="text-sm text-muted-foreground">
           See how the farm is working — daily milk, sick animals, stock pressure, and the month as a whole.
@@ -67,8 +67,54 @@ export function ReportsView() {
             <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="h-12 bg-input" />
           </Field>
         )}
-        <Button className="h-12 self-end md:col-span-2" disabled={loading} onClick={() => void load()}>
+        <Button className="h-12 self-end" disabled={loading} onClick={() => void load()}>
           {loading ? "Building…" : "Generate report"}
+        </Button>
+        <Button
+          className="h-12 self-end"
+          variant="outline"
+          disabled={loading || (kind === "daily" ? !daily : !monthly)}
+          onClick={() => {
+            const rows =
+              kind === "daily" && daily
+                ? [
+                    ["metric", "value"],
+                    ["date", daily.date],
+                    ["milk_liters", String(daily.milkLiters)],
+                    ["sessions", String(daily.sessionsLogged)],
+                    ["active_cows", String(daily.activeCows)],
+                    ["sick_cows", String(daily.sickCows)],
+                    ["low_stock", String(daily.lowStockCount)],
+                    ["expired_stock", String(daily.expiredStockCount)],
+                    ["open_tasks", String(daily.openTasks)],
+                    ["top_cow", daily.topCow ? `${daily.topCow.tagNumber}|${daily.topCow.liters}` : ""],
+                  ]
+                : monthly
+                  ? [
+                      ["metric", "value"],
+                      ["month", monthly.month],
+                      ["milk_liters", String(monthly.milkLiters)],
+                      ["milking_days", String(monthly.milkingDays)],
+                      ["avg_daily_liters", String(monthly.averageDailyLiters)],
+                      ["active_cows", String(monthly.activeCows)],
+                      ["health_events", String(monthly.healthEvents)],
+                      ["washes", String(monthly.washesDone)],
+                      ["stock_outs", String(monthly.stockMovementsOut)],
+                      ...monthly.byDay.map((d) => [`day_${d.date}`, String(d.liters)]),
+                    ]
+                  : [];
+            const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = kind === "daily" ? `urora-daily-${date}.csv` : `urora-monthly-${month}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success("CSV downloaded");
+          }}
+        >
+          Export CSV
         </Button>
       </div>
 

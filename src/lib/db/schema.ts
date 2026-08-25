@@ -6,6 +6,10 @@ import { healthEvents } from "@/modules/health/schema";
 import { stockItems, stockMovements } from "@/modules/inventory/schema";
 import { washRecords } from "@/modules/wash/schema";
 import { farmTasks } from "@/modules/tasks/schema";
+import { breedingEvents } from "@/modules/breeding/schema";
+import { expenses, milkSales } from "@/modules/finance/schema";
+import { activityLog } from "@/modules/activity/schema";
+import { kraals } from "@/modules/kraals/schema";
 
 export const schema = {
   farms,
@@ -18,6 +22,11 @@ export const schema = {
   stockMovements,
   washRecords,
   farmTasks,
+  breedingEvents,
+  expenses,
+  milkSales,
+  activityLog,
+  kraals,
 };
 
 export {
@@ -31,4 +40,9 @@ export {
   stockMovements,
   washRecords,
   farmTasks,
+  breedingEvents,
+  expenses,
+  milkSales,
+  activityLog,
+  kraals,
 };

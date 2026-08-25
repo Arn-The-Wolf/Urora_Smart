@@ -15,18 +15,30 @@ Demo accounts (password `farm1234` for both):
 
 | Role | Email | Can do |
 | --- | --- | --- |
-| Farm boss | `farmer@urora.farm` | Full ops + daily/monthly reports |
+| Farm owner | `farmer@urora.farm` | Full ops + breeding + money + reports + activity |
 | Farm operator | `operator@urora.farm` | Day-to-day herd, milk, stock, washes |
 
 ## What is live
 
-- Two roles: **Farm operator** (field work) and **Farm boss** (oversight + reports)
-- System-wide **alerts**: reorder thresholds (before zero), expired/expiring medicines, sick cows, milk drop / missing sessions, overdue washes & tasks
-- Store with **batch code + expiry** on medicines and supplies
-- Herd and milking records with **offline queue + sync** (same cow/date/session merges; newer server wins; conflicts surfaced on sync)
-- Health and isolation for sick animals
-- Tick wash / dip in treated water, with the next due date
-- Daily schedule (milking, spray, sick checks, restock)
-- Auth: **scrypt** password hashing, login **rate limiting** (5 failed attempts / 15 min per IP+email)
+### Phase 1 — protect milk & money
+- **Milk withhold after antibiotics** — set withdrawal days on health records; milking blocked until clear; alerts
+- **Breeding / calving calendar** — heat, AI, pregnancy check, dry-off, calving with auto expected dates
+- **Expenses & milk sales** — owner-only `/finance` with monthly net summary
 
-Production uses `DATABASE_URL` (Postgres / Neon). Locally it uses PGlite in `data/`. Without `DATABASE_URL` on Vercel, data is in-memory and resets on cold start.
+### Phase 2 — store & offline
+- **Feed inventory** — `feed` category (hay, bran, meal) with reorder alerts
+- **Offline queue** — health, stock, and wash forms queue when offline (sync on reconnect)
+
+### Phase 3 — trust & reach
+- **Worker activity log** — owner `/activity` (health, breeding, finance actions)
+- **Photo attachments** — health records support `photoUrl` (paste link; upload provider next)
+- **SMS / WhatsApp digests** — owner phone + channel in Settings; preview at `/api/digest/preview`
+
+### Phase 4 — polish & scale
+- **PWA install banner** + clearer pending-sync bar
+- **CSV export** on Reports
+- **Multi-kraal** — add kraals under Settings (`/api/kraals`)
+
+Also: two roles, system-wide alerts, batch/expiry on stock, offline cow/milk sync, scrypt auth + login rate limits.
+
+Production uses `DATABASE_URL` (Neon Postgres). Locally it uses PGlite in `data/`.

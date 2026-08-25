@@ -76,14 +76,24 @@ export function CattleView() {
           <Link
             key={cow.id}
             href={`/cattle/${cow.id}`}
-            className="flex items-center justify-between rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition hover:ring-primary/30"
+            className="flex items-center justify-between gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition hover:ring-primary/30"
           >
-            <div className="min-w-0">
-              <p className="font-mono text-xs font-bold tracking-wide text-primary">{cow.tagNumber}</p>
-              <p className="truncate font-heading text-xl">{cow.name ?? "Unnamed"}</p>
-              <p className="text-sm text-muted-foreground">
-                {[cow.breed, cow.gender === "female" ? "Female" : "Male", ageLabel(cow.birthDate)].filter(Boolean).join(" · ")}
-              </p>
+            <div className="flex min-w-0 items-center gap-3">
+              {cow.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={cow.photoUrl} alt="" className="size-14 shrink-0 rounded-xl object-cover ring-1 ring-foreground/8" />
+              ) : (
+                <span className="grid size-14 shrink-0 place-items-center rounded-xl bg-[#e4f0e4] text-lg font-bold text-primary">
+                  {(cow.name?.[0] ?? cow.tagNumber.slice(-2)).toUpperCase()}
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="font-mono text-xs font-bold tracking-wide text-primary">{cow.tagNumber}</p>
+                <p className="truncate font-heading text-xl">{cow.name ?? "Unnamed"}</p>
+                <p className="text-sm text-muted-foreground">
+                  {[cow.breed, cow.gender === "female" ? "Female" : "Male", ageLabel(cow.birthDate)].filter(Boolean).join(" · ")}
+                </p>
+              </div>
             </div>
             <Badge variant={cow.status === "active" ? "default" : "secondary"}>{statusLabel(cow.status)}</Badge>
           </Link>

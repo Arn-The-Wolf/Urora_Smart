@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Urora Smart",
-    short_name: "Urora",
+    short_name: "Urora Smart",
     description: "Cattle, milk, health, stock, and daily farm work. Works on your phone, including offline.",
     start_url: "/dashboard",
     display: "standalone",

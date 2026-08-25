@@ -1,11 +1,12 @@
-import { daysAgo, nowIso, todayInKigali } from "@/lib/dates";
+import { addDays, daysAgo, nowIso, todayInKigali } from "@/lib/dates";
 import type { FarmAlert } from "@/lib/types";
-import { listSickAnimals } from "@/modules/health/service";
+import { listActiveWithholds, listSickAnimals } from "@/modules/health/service";
 import { listExpiredStock, listExpiringStock, listLowStock } from "@/modules/inventory/service";
 import { listMilkings } from "@/modules/milk/service";
 import { listCows } from "@/modules/cattle/service";
 import { listOpenTasks } from "@/modules/tasks/service";
 import { nextWashDue } from "@/modules/wash/service";
+import { listUpcomingBreeding } from "@/modules/breeding/service";
 
 export async function getFarmAlerts(farmId: string): Promise<FarmAlert[]> {
   const today = todayInKigali();
@@ -19,6 +20,8 @@ export async function getFarmAlerts(farmId: string): Promise<FarmAlert[]> {
     cows,
     recentMilk,
     weekMilk,
+    withholds,
+    breedingUpcoming,
   ] = await Promise.all([
     listSickAnimals(farmId),
     listLowStock(farmId),
@@ -29,10 +32,26 @@ export async function getFarmAlerts(farmId: string): Promise<FarmAlert[]> {
     listCows(farmId, "active"),
     listMilkings(farmId, { from: today, to: today }),
     listMilkings(farmId, { from: daysAgo(7), to: daysAgo(1) }),
+    listActiveWithholds(farmId, today),
+    listUpcomingBreeding(farmId, 21),
   ]);
 
   const alerts: FarmAlert[] = [];
   const stamp = nowIso();
+  const withholdCowIds = new Set(withholds.map((row) => row.cowId));
+
+  for (const event of withholds) {
+    const cow = cows.find((item) => item.id === event.cowId);
+    alerts.push({
+      id: `withhold-${event.id}`,
+      kind: "milk_withhold",
+      severity: "critical",
+      title: `Milk withhold · ${cow?.name || cow?.tagNumber || "cow"}`,
+      detail: `Do not put milk in the can until ${event.milkWithholdUntil}${event.medicineName ? ` · ${event.medicineName}` : ""}`,
+      href: "/health",
+      createdAt: stamp,
+    });
+  }
 
   for (const event of sick) {
     alerts.push({
@@ -108,10 +127,37 @@ export async function getFarmAlerts(farmId: string): Promise<FarmAlert[]> {
     });
   }
 
+  for (const event of breedingUpcoming) {
+    const cow = cows.find((item) => item.id === event.cowId);
+    const label = cow?.name || cow?.tagNumber || "cow";
+    if (event.dryOffDate && event.dryOffDate >= today && event.dryOffDate <= addDays(today, 14)) {
+      alerts.push({
+        id: `dryoff-${event.id}`,
+        kind: "dry_off_due",
+        severity: event.dryOffDate <= today ? "critical" : "warning",
+        title: `Dry-off for ${label}`,
+        detail: `Dry off by ${event.dryOffDate} · expected calving ${event.expectedCalving || "—"}`,
+        href: "/breeding",
+        createdAt: stamp,
+      });
+    }
+    if (event.expectedCalving && event.expectedCalving >= today && event.expectedCalving <= addDays(today, 21)) {
+      alerts.push({
+        id: `calving-${event.id}`,
+        kind: "calving_due",
+        severity: event.expectedCalving <= addDays(today, 7) ? "critical" : "warning",
+        title: `Calving window · ${label}`,
+        detail: `Expected around ${event.expectedCalving}`,
+        href: "/breeding",
+        createdAt: stamp,
+      });
+    }
+  }
+
   const milkers = cows.filter((cow) => cow.gender === "female");
   const milkedIds = new Set(recentMilk.map((row) => row.cowId));
   for (const cow of milkers) {
-    if (milkedIds.has(cow.id)) continue;
+    if (milkedIds.has(cow.id) || withholdCowIds.has(cow.id)) continue;
     alerts.push({
       id: `milk-missing-${cow.id}`,
       kind: "milk_missing",

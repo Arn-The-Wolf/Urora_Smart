@@ -1,22 +1,38 @@
 import Link from "next/link";
-import { Bell, ClipboardList, Droplets, FileBarChart, Package, Settings, SprayCan } from "lucide-react";
+import {
+  Bell,
+  ClipboardList,
+  Droplets,
+  FileBarChart,
+  Heart,
+  History,
+  Package,
+  Settings,
+  SprayCan,
+  Wallet,
+} from "lucide-react";
 import { getSession } from "@/lib/auth/session";
-import { roleLabel } from "@/lib/roles";
+import { roleLabel, isOwner } from "@/lib/roles";
 
 export default async function MorePage() {
   const session = await getSession();
-  const isBoss = session?.user.role === "boss";
+  const owner = session ? isOwner(session.user.role) : false;
 
   const links = [
-    { href: "/alerts", label: "Alerts", icon: Bell, text: "Reorder, expiry, milk, cows, washes" },
+    { href: "/alerts", label: "Alerts", icon: Bell, text: "Withhold, reorder, expiry, milk, cows" },
+    { href: "/breeding", label: "Breeding & calving", icon: Heart, text: "Heat, AI, dry-off, calving dates" },
     { href: "/milk", label: "Milking records", icon: Droplets, text: "Sessions and daily totals" },
-    { href: "/stock", label: "Store", icon: Package, text: "Medicines, salt, acaricide + expiry" },
+    { href: "/stock", label: "Store", icon: Package, text: "Feed, medicines, salt, expiry" },
     { href: "/wash", label: "Wash & dip", icon: SprayCan, text: "Chemically treated water" },
     { href: "/schedule", label: "Schedule", icon: ClipboardList, text: "Today’s farm checklist" },
-    ...(isBoss
-      ? [{ href: "/reports", label: "Reports", icon: FileBarChart, text: "Daily and monthly farm reports" }]
+    ...(owner
+      ? [
+          { href: "/finance", label: "Money", icon: Wallet, text: "Milk sales and farm expenses" },
+          { href: "/reports", label: "Reports", icon: FileBarChart, text: "Daily and monthly · export CSV" },
+          { href: "/activity", label: "Activity log", icon: History, text: "Who logged what, when" },
+        ]
       : []),
-    { href: "/settings", label: "Settings", icon: Settings, text: "Farm profile and sign out" },
+    { href: "/settings", label: "Settings", icon: Settings, text: "Farm profile, digests, sign out" },
   ];
 
   return (

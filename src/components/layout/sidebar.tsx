@@ -8,16 +8,19 @@ import {
   ClipboardList,
   Droplets,
   FileBarChart,
+  Heart,
   HeartPulse,
+  History,
   House,
   Package,
   Settings,
   SprayCan,
+  Wallet,
 } from "lucide-react";
 import { UroraWordmark } from "@/components/brand/logo";
 import { SyncBadge } from "@/components/sync/sync-badge";
 import { useFarmData } from "@/lib/offline/provider";
-import { roleLabel } from "@/lib/roles";
+import { roleLabel, isOwner } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 const workspace = [
@@ -26,9 +29,16 @@ const workspace = [
   { href: "/cattle", label: "Cows", icon: Beef },
   { href: "/milk", label: "Milking", icon: Droplets },
   { href: "/health", label: "Health", icon: HeartPulse },
+  { href: "/breeding", label: "Breeding", icon: Heart },
   { href: "/stock", label: "Stock", icon: Package },
   { href: "/wash", label: "Wash & dip", icon: SprayCan },
   { href: "/schedule", label: "Schedule", icon: ClipboardList },
+];
+
+const ownerLinks = [
+  { href: "/finance", label: "Money", icon: Wallet },
+  { href: "/reports", label: "Reports", icon: FileBarChart },
+  { href: "/activity", label: "Activity", icon: History },
 ];
 
 export function Sidebar() {
@@ -41,10 +51,7 @@ export function Sidebar() {
     .slice(0, 2)
     .toUpperCase();
 
-  const links =
-    user.role === "boss"
-      ? [...workspace, { href: "/reports", label: "Reports", icon: FileBarChart }]
-      : workspace;
+  const links = isOwner(user.role) ? [...workspace, ...ownerLinks] : workspace;
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[246px] flex-col bg-[#173d31] px-4 pt-7 pb-5 text-[#d8e6dc] md:flex">

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowUpRight, Beef, ChevronRight, CloudOff, Droplets, HeartPulse, Package, ShieldCheck, SprayCan } from "lucide-react";
+import { ArrowUpRight, Beef, ChevronRight, ClipboardCheck, CloudOff, Droplets, HeartPulse, Package, ShieldCheck, Smartphone, SprayCan } from "lucide-react";
 import { UroraWordmark } from "@/components/brand/logo";
 import { getSession } from "@/lib/auth/session";
 
@@ -87,29 +87,81 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section id="how-it-works" className="mx-auto grid max-w-[1240px] gap-10 px-4 pb-24 md:grid-cols-[0.8fr_1.2fr] md:px-8">
-          <div>
-            <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">A CALMER ROUTINE</p>
-            <h2 className="mt-2 text-4xl tracking-[-1.7px]">From morning milking to the next tick spray.</h2>
-          </div>
-          <div className="flex flex-col gap-6">
-            <Step n="01" title="Set up your herd and store" text="Add cows, medicines, salt, and acaricide once." />
-            <Step n="02" title="Record the day’s work" text="Milk, treatments, and chemically treated washes as they happen." />
-            <Step n="03" title="See what is due tomorrow" text="Sick animals, low stock, and the next spray date sit on the home screen." />
+        <section id="how-it-works" className="how-it-works-section">
+          <div className="how-it-works-inner">
+            <div className="how-it-works-intro">
+              <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">HOW IT WORKS</p>
+              <h2 className="mt-2 max-w-md text-4xl tracking-[-1.7px]">Three steps from kraal to clarity.</h2>
+              <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-[#718079]">
+                Urora Smart is built around the rhythm of a real dairy day — set up once, record as you go, and let the dashboard surface what matters next.
+              </p>
+              <Link
+                href="/register"
+                className="mt-8 inline-flex items-center gap-2 rounded-[10px] border border-[#b9cbbd] bg-white px-4 py-3 text-sm font-bold text-[#176b45] shadow-sm transition hover:border-primary"
+              >
+                Start your farm workspace <ArrowUpRight className="size-4" />
+              </Link>
+            </div>
+            <ol className="how-steps">
+              <HowStep
+                n="1"
+                icon={Beef}
+                title="Set up your herd & store"
+                text="Add cows with tags and photos, medicines, feed, salt blocks, and acaricide. Multi-kraal support keeps larger farms organized."
+              />
+              <HowStep
+                n="2"
+                icon={ClipboardCheck}
+                title="Record work in the field"
+                text="Log milk sessions, health treatments with photo proof, stock movements, and chemically treated tick washes — even without signal."
+              />
+              <HowStep
+                n="3"
+                icon={Smartphone}
+                title="See what needs attention"
+                text="Dashboard alerts flag sick animals, milk withholds, low stock, and upcoming sprays so nothing slips through the notebook."
+              />
+            </ol>
           </div>
         </section>
       </main>
 
-      <footer id="footer" className="landing-footer">
-        <UroraWordmark light />
-        <p>Practical tools for healthier herds and stronger farms in Rwanda.</p>
-        <div className="footer-links">
-          <a href="#features">Features</a>
-          <a href="#how-it-works">How it works</a>
-          <Link href="/login">Sign in</Link>
-          <a href="mailto:hello@urora.farm">Contact</a>
+      <footer id="footer" className="site-footer">
+        <div className="site-footer-grid">
+          <div className="site-footer-brand">
+            <UroraWordmark light />
+            <p>Practical herd management for healthier cows and stronger farms across Rwanda and East Africa.</p>
+            <div className="site-footer-trust">
+              <ShieldCheck className="size-4 text-[#9bd4a9]" />
+              <span>Offline-ready · Owner & operator roles · Built for the field</span>
+            </div>
+          </div>
+          <div className="site-footer-col">
+            <h4>Product</h4>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it works</a>
+            <Link href="/register">Create a farm</Link>
+          </div>
+          <div className="site-footer-col">
+            <h4>Account</h4>
+            <Link href="/login">Sign in</Link>
+            <Link href="/register">Register</Link>
+            <span className="text-[#779887]">Demo: farmer@urora.farm</span>
+          </div>
+          <div className="site-footer-col">
+            <h4>Contact</h4>
+            <a href="mailto:hello@urora.farm">hello@urora.farm</a>
+            <span className="text-[#779887]">Nyagatare · Rwanda</span>
+          </div>
         </div>
-        <small>© 2026 Urora Smart. Built for the people who feed us.</small>
+        <div className="site-footer-bottom">
+          <small>© 2026 Urora Smart. Built for the people who feed us.</small>
+          <div className="site-footer-bottom-links">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it works</a>
+            <Link href="/login">Sign in</Link>
+          </div>
+        </div>
       </footer>
     </div>
   );
@@ -126,14 +178,27 @@ function Feature({ icon: Icon, title, text }: { icon: typeof Beef; title: string
   );
 }
 
-function Step({ n, title, text }: { n: string; title: string; text: string }) {
+function HowStep({
+  n,
+  icon: Icon,
+  title,
+  text,
+}: {
+  n: string;
+  icon: typeof Beef;
+  title: string;
+  text: string;
+}) {
   return (
-    <div className="flex gap-5 border-b border-[#dfe8df] pb-5">
-      <span className="font-mono text-xs text-earth">{n}</span>
-      <div>
-        <h3 className="text-[17px] font-semibold">{title}</h3>
-        <p className="mt-1 text-[13px] text-[#718079]">{text}</p>
+    <li className="how-step-card">
+      <span className="how-step-number">{n}</span>
+      <div className="grid size-11 place-items-center rounded-xl bg-[#e4f0e4] text-primary">
+        <Icon className="size-5" />
       </div>
-    </div>
+      <div>
+        <h3 className="text-[18px] font-semibold tracking-[-0.3px]">{title}</h3>
+        <p className="mt-2 text-[14px] leading-relaxed text-[#718079]">{text}</p>
+      </div>
+    </li>
   );
 }

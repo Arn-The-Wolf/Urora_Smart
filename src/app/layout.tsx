@@ -11,7 +11,7 @@ const geist = Geist({
 
 export const metadata: Metadata = {
   title: {
-    default: "Urora Smart | Farm management",
+    default: "Urora Smart",
     template: "%s · Urora Smart",
   },
   description: "Cattle, milk, health, stock, and daily farm work in one calm workspace. Built for farms in Rwanda.",

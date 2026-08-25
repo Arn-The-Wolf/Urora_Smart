@@ -8,7 +8,10 @@ export const domainModules = [
   { name: "inventory", phase: 1, path: "src/modules/inventory" },
   { name: "wash", phase: 1, path: "src/modules/wash" },
   { name: "tasks", phase: 1, path: "src/modules/tasks" },
-  { name: "breeding", phase: 4, path: "src/modules/breeding", status: "planned" },
-  { name: "finance", phase: 6, path: "src/modules/finance", status: "planned" },
-  { name: "crops", phase: 7, path: "src/modules/crops", status: "planned" },
+  { name: "alerts", phase: 1, path: "src/modules/alerts" },
+  { name: "breeding", phase: 1, path: "src/modules/breeding" },
+  { name: "finance", phase: 1, path: "src/modules/finance" },
+  { name: "activity", phase: 1, path: "src/modules/activity" },
+  { name: "kraals", phase: 1, path: "src/modules/kraals" },
+  { name: "reports", phase: 1, path: "src/modules/reports" },
 ] as const;

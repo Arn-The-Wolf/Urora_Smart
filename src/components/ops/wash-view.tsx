@@ -18,15 +18,22 @@ export function WashView({ washes }: { washes: WashRecord[] }) {
     event.preventDefault();
     setSaving(true);
     const form = new FormData(event.currentTarget);
+    const payload = Object.fromEntries(form.entries());
     try {
-      const response = await fetch("/api/wash", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(Object.fromEntries(form.entries())),
-      });
-      const data = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(data.error ?? "Could not save");
-      toast.success("Wash / dip recorded");
+      if (!navigator.onLine) {
+        const { enqueue } = await import("@/lib/offline/sync");
+        await enqueue({ entity: "wash", op: "upsert", record: payload });
+        toast.success("Saved offline — will sync when you’re back online");
+      } else {
+        const response = await fetch("/api/wash", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = (await response.json()) as { error?: string };
+        if (!response.ok) throw new Error(data.error ?? "Could not save");
+        toast.success("Wash / dip recorded");
+      }
       event.currentTarget.reset();
       router.refresh();
     } catch (error) {

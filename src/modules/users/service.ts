@@ -24,7 +24,21 @@ export const loginSchema = z.object({
 export const farmUpdateSchema = z.object({
   name: z.string().trim().min(2).max(80),
   location: z.string().trim().max(120).nullable(),
+  digestPhone: z.string().trim().max(40).nullable().optional(),
+  digestChannel: z.enum(["sms", "whatsapp", "none"]).nullable().optional(),
 });
+
+function toFarm(row: typeof farms.$inferSelect): Farm {
+  return {
+    id: row.id,
+    name: row.name,
+    location: row.location,
+    digestPhone: row.digestPhone ?? null,
+    digestChannel: row.digestChannel ?? null,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
 
 export async function registerFarm(input: z.infer<typeof registerSchema>) {
   const parsed = registerSchema.parse(input);
@@ -48,7 +62,7 @@ export async function registerFarm(input: z.infer<typeof registerSchema>) {
     email: parsed.email,
     passwordHash: await hashPassword(parsed.password),
     name: parsed.name,
-    role: "boss",
+    role: "owner",
     createdAt: now,
     updatedAt: now,
   });
@@ -70,11 +84,13 @@ export async function updateFarm(farmId: string, input: z.infer<typeof farmUpdat
     .set({
       name: parsed.name,
       location: parsed.location,
+      digestPhone: parsed.digestPhone ?? null,
+      digestChannel: parsed.digestChannel ?? null,
       updatedAt,
     })
     .where(eq(farms.id, farmId));
   const rows = await db.select().from(farms).where(eq(farms.id, farmId)).limit(1);
   const row = rows[0];
   if (!row) throw new Error("Farm not found");
-  return row;
+  return toFarm(row);
 }

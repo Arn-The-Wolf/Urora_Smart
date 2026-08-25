@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
-import { farms, users, cows, milkingRecords, healthEvents, stockItems, washRecords, farmTasks, schema } from "@/lib/db/schema";
+import { farms, users, cows, milkingRecords, healthEvents, stockItems, washRecords, farmTasks, breedingEvents, expenses, milkSales, schema } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/auth/password";
 import { addDays, nowIso, todayInKigali } from "@/lib/dates";
 import { createId } from "@/lib/id";
@@ -118,10 +118,10 @@ export async function seedIfEmpty(db: SeedDb) {
     }
   }
   const demoUser = await db.select().from(users).where(eq(users.email, DEMO_EMAIL)).limit(1);
-  if (demoUser[0] && (demoUser[0].role === "owner" || demoUser[0].role === "herder")) {
+  if (demoUser[0] && (demoUser[0].role === "boss" || demoUser[0].role === "herder")) {
     await db
       .update(users)
-      .set({ role: demoUser[0].role === "owner" ? "boss" : "operator", updatedAt: nowIso() })
+      .set({ role: demoUser[0].role === "herder" ? "operator" : "owner", updatedAt: nowIso() })
       .where(eq(users.id, demoUser[0].id));
   }
   let farmId = demoUser[0]?.farmId;
@@ -147,7 +147,7 @@ export async function seedIfEmpty(db: SeedDb) {
       email: DEMO_EMAIL,
       passwordHash,
       name: "Jean Uwase",
-      role: "boss",
+      role: "owner",
       createdAt: now,
       updatedAt: now,
     });
@@ -178,6 +178,7 @@ export async function seedIfEmpty(db: SeedDb) {
         birthDate: cow.birthDate,
         motherTag: cow.motherTag,
         status: cow.status,
+        kraalId: null,
         notes: cow.notes,
         createdAt: now,
         updatedAt: now,
@@ -256,10 +257,13 @@ async function seedOperations(
 
   const catalog = [
     { name: "Amitraz 12.5%", category: "acaricide", unit: "L", quantity: 4, reorderLevel: 1, batchCode: "AM-0826", expiresOn: addDays(today, 120), notes: "Tick control. Mix 1:500 in spray water." },
-    { name: "Oxytetracycline 20%", category: "medicine", unit: "vials", quantity: 12, reorderLevel: 4, batchCode: "OXY-441", expiresOn: addDays(today, 18), notes: "Injectable antibiotic." },
+    { name: "Oxytetracycline 20%", category: "medicine", unit: "vials", quantity: 12, reorderLevel: 4, batchCode: "OXY-441", expiresOn: addDays(today, 18), notes: "Injectable antibiotic. Milk withhold usually 3–7 days." },
     { name: "Ivermectin", category: "medicine", unit: "bottles", quantity: 6, reorderLevel: 2, batchCode: "IVM-119", expiresOn: addDays(today, -5), notes: "Dewormer / parasite control." },
     { name: "Salt blocks", category: "salt", unit: "blocks", quantity: 8, reorderLevel: 3, batchCode: null, expiresOn: null, notes: "Lick blocks at the water trough." },
     { name: "Mineral lick", category: "mineral", unit: "kg", quantity: 25, reorderLevel: 8, batchCode: null, expiresOn: null, notes: "Phosphorus and calcium mix." },
+    { name: "Dairy meal", category: "feed", unit: "kg", quantity: 120, reorderLevel: 40, batchCode: null, expiresOn: null, notes: "Morning concentrate for milkers." },
+    { name: "Bran", category: "feed", unit: "kg", quantity: 80, reorderLevel: 25, batchCode: null, expiresOn: null, notes: "Wheat bran for mixing." },
+    { name: "Hay bales", category: "feed", unit: "bales", quantity: 18, reorderLevel: 6, batchCode: null, expiresOn: null, notes: "Dry-season fodder." },
     { name: "Milking disinfectant", category: "disinfectant", unit: "L", quantity: 5, reorderLevel: 2, batchCode: "DIP-77", expiresOn: addDays(today, 60), notes: "Teat dip after milking." },
     { name: "Wound spray", category: "medicine", unit: "cans", quantity: 3, reorderLevel: 1, batchCode: "WS-09", expiresOn: addDays(today, 200), notes: "Cuts and tick wounds." },
   ] as const;
@@ -293,7 +297,9 @@ async function seedOperations(
       treatment: "Isolate from the milking line until the evening check. Strip the quarter.",
       medicineName: "Oxytetracycline 20%",
       isolated: 1,
-      notes: "Watched after yesterday's weak morning milking.",
+      milkWithholdUntil: addDays(today, 4),
+      photoUrl: null,
+      notes: "Watched after yesterday's weak morning milking. Milk withhold set after antibiotic.",
       createdAt: now,
       updatedAt: now,
     });
@@ -311,11 +317,53 @@ async function seedOperations(
       treatment: "LSD booster",
       medicineName: null,
       isolated: 0,
+      milkWithholdUntil: null,
+      photoUrl: null,
       notes: "Annual lumpy skin disease booster.",
       createdAt: now,
       updatedAt: now,
     });
+
+    await db.insert(breedingEvents).values({
+      id: createId(),
+      farmId,
+      cowId: imena.id,
+      date: addDays(today, -90),
+      kind: "ai",
+      status: "confirmed",
+      sireTag: "BULL-FRIES-12",
+      expectedCalving: addDays(today, 190),
+      dryOffDate: addDays(today, 130),
+      notes: "Second AI — confirmed pregnant at 60-day check.",
+      createdAt: now,
+      updatedAt: now,
+    });
   }
+
+  await db.insert(expenses).values({
+    id: createId(),
+    farmId,
+    date: addDays(today, -2),
+    category: "feed",
+    amount: 85000,
+    vendor: "Nyagatare agro store",
+    notes: "Dairy meal 2 sacks",
+    recordedBy: "Jean Uwase",
+    createdAt: now,
+  });
+
+  await db.insert(milkSales).values({
+    id: createId(),
+    farmId,
+    date: addDays(today, -1),
+    liters: 62,
+    pricePerLiter: 420,
+    totalAmount: 26040,
+    buyer: "Nyagatare dairy co-op",
+    notes: "Morning collection",
+    recordedBy: "Jean Uwase",
+    createdAt: now,
+  });
 
   await db.insert(washRecords).values({
     id: createId(),

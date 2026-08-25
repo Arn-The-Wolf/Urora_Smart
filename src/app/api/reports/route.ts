@@ -10,8 +10,8 @@ export async function GET(request: Request) {
   const month = url.searchParams.get("month") ?? date.slice(0, 7);
 
   return withAuth(async (session) => {
-    if (session.user.role !== "boss") {
-      return jsonError("Only the farm boss can generate reports", 403);
+    if (session.user.role !== "owner") {
+      return jsonError("Only the farm owner can generate reports", 403);
     }
     if (kind === "monthly") {
       const report = await getMonthlyReport(session.farm.id, month);
@@ -19,5 +19,5 @@ export async function GET(request: Request) {
     }
     const report = await getDailyReport(session.farm.id, date);
     return NextResponse.json({ report });
-  }, ["boss"]);
+  }, ["owner"]);
 }

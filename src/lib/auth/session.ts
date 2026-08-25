@@ -28,6 +28,8 @@ function toFarm(row: typeof farms.$inferSelect): Farm {
     id: row.id,
     name: row.name,
     location: row.location,
+    digestPhone: row.digestPhone ?? null,
+    digestChannel: row.digestChannel ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

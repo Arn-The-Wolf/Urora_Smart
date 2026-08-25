@@ -16,6 +16,8 @@ export const cows = pgTable(
     birthDate: text("birth_date"),
     motherTag: text("mother_tag"),
     status: text("status").notNull().default("active"),
+    kraalId: text("kraal_id"),
+    photoUrl: text("photo_url"),
     notes: text("notes"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),

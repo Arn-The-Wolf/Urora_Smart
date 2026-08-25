@@ -1,29 +1,55 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Sidebar } from "@/components/layout/sidebar";
 import { SyncBadge } from "@/components/sync/sync-badge";
 import { UroraMark } from "@/components/brand/logo";
+import { LogoutButton } from "@/components/auth/logout-button";
+import { PwaInstallBanner } from "@/components/pwa/install-banner";
 import { useFarmData } from "@/lib/offline/provider";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { farm } = useFarmData();
+  const { farm, pending, online } = useFarmData();
 
   return (
     <div className="min-h-full md:pl-[246px]">
       <Sidebar />
       <header className="flex items-center justify-between bg-[#173d31] px-5 py-4 text-white md:hidden">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 rounded-lg transition hover:opacity-90">
           <UroraMark />
-          <strong className="text-xl tracking-[-1px]">urora</strong>
+          <strong className="text-xl tracking-[-1px]">Urora Smart</strong>
+        </Link>
+        <div className="flex items-center gap-2">
+          <SyncBadge />
+          <LogoutButton variant="ghost" className="border border-[#35604d] text-[#d8e6dc] hover:bg-[#2b5d4a] hover:text-white" />
         </div>
-        <SyncBadge />
       </header>
+      {!online || pending > 0 ? (
+        <div className="border-b border-[#e5c9b8] bg-[#fff8f3] px-4 py-2 text-center text-xs text-[#8a5a32] md:px-[42px]">
+          {!online
+            ? "You’re offline — cow, milk, health, stock, and wash changes queue on this device."
+            : `${pending} change${pending === 1 ? "" : "s"} waiting to sync. Tap the sync badge when ready.`}
+        </div>
+      ) : null}
       <main className="mx-auto w-full max-w-[1250px] px-4 pb-24 pt-6 md:px-[42px] md:pb-12 md:pt-8">
-        <p className="mb-1 text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">URORA SMART / {farm.name.toUpperCase()}</p>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-[10px] border border-[#dfe8df] bg-white px-3.5 py-2 text-sm font-bold text-[#176b45] shadow-sm transition hover:border-[#b9cbbd] hover:bg-[#f6faf5]"
+          >
+            <UroraMark />
+            Urora Smart
+          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm text-muted-foreground">{farm.name}</span>
+            <LogoutButton />
+          </div>
+        </div>
         {children}
       </main>
+      <PwaInstallBanner />
       <BottomNav />
     </div>
   );

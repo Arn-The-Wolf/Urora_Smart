@@ -50,6 +50,12 @@ export function CowDetailView({ cowId }: { cowId: string }) {
   return (
     <div className="space-y-6">
       <div className="animate-fade-up">
+        {cow.photoUrl ? (
+          <div className="mb-4 overflow-hidden rounded-2xl border border-border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cow.photoUrl} alt="" className="max-h-56 w-full object-cover" />
+          </div>
+        ) : null}
         <p className="font-mono text-sm font-bold text-primary">{cow.tagNumber}</p>
         <div className="mt-1 flex items-start justify-between gap-3">
           <h1 className="font-heading text-3xl tracking-tight">{cow.name ?? "Unnamed"}</h1>
