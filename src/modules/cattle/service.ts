@@ -3,10 +3,12 @@ import { cows } from "@/modules/cattle/schema";
 import { getDb } from "@/lib/db";
 import { nowIso } from "@/lib/dates";
 import { createId } from "@/lib/id";
+import { parsePhotoList, serializePhotoList } from "@/lib/photos";
 import type { Cow, CowStatus, Gender } from "@/lib/types";
 import { cowInputSchema, type CowInput } from "@/modules/cattle/validators";
 
 function toCow(row: typeof cows.$inferSelect): Cow {
+  const photoUrls = parsePhotoList(row.photoUrls, row.photoUrl);
   return {
     id: row.id,
     farmId: row.farmId,
@@ -19,12 +21,18 @@ function toCow(row: typeof cows.$inferSelect): Cow {
     motherTag: row.motherTag,
     status: row.status as CowStatus,
     kraalId: row.kraalId ?? null,
-    photoUrl: row.photoUrl ?? null,
+    photoUrl: photoUrls[0] ?? null,
+    photoUrls,
     notes: row.notes,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt,
   };
+}
+
+function photosFromInput(parsed: CowInput) {
+  const fromList = parsed.photoUrls?.length ? parsed.photoUrls : parsed.photoUrl ? [parsed.photoUrl] : [];
+  return serializePhotoList(fromList);
 }
 
 export async function listCows(farmId: string, status?: CowStatus) {
@@ -64,6 +72,7 @@ export async function createCow(farmId: string, input: CowInput) {
     throw new Error("A cow with this tag number already exists");
   }
   const now = nowIso();
+  const photos = photosFromInput(parsed);
   const row = {
     id: parsed.id ?? createId(),
     farmId,
@@ -76,7 +85,8 @@ export async function createCow(farmId: string, input: CowInput) {
     motherTag: parsed.motherTag ?? null,
     status: parsed.status,
     kraalId: null,
-    photoUrl: parsed.photoUrl ?? null,
+    photoUrl: photos.photoUrl,
+    photoUrls: photos.photoUrls,
     notes: parsed.notes ?? null,
     createdAt: parsed.createdAt ?? now,
     updatedAt: parsed.updatedAt ?? now,
@@ -92,6 +102,7 @@ export async function updateCow(farmId: string, id: string, input: CowInput) {
   if (!current) throw new Error("Cow not found");
   const db = await getDb();
   const now = nowIso();
+  const photos = photosFromInput(parsed);
   const next = {
     tagNumber: parsed.tagNumber,
     name: parsed.name ?? null,
@@ -100,7 +111,8 @@ export async function updateCow(farmId: string, id: string, input: CowInput) {
     birthDate: parsed.birthDate ?? null,
     motherTag: parsed.motherTag ?? null,
     status: parsed.status,
-    photoUrl: parsed.photoUrl ?? null,
+    photoUrl: photos.photoUrl,
+    photoUrls: photos.photoUrls,
     notes: parsed.notes ?? null,
     updatedAt: parsed.updatedAt ?? now,
   };
@@ -108,7 +120,7 @@ export async function updateCow(farmId: string, id: string, input: CowInput) {
     .update(cows)
     .set(next)
     .where(and(eq(cows.id, id), eq(cows.farmId, farmId)));
-  return { ...current, ...next };
+  return { ...current, ...next, photoUrls: parsePhotoList(next.photoUrls, next.photoUrl) };
 }
 
 export async function deleteCow(farmId: string, id: string) {
@@ -132,13 +144,32 @@ export async function upsertCowFromSync(farmId: string, record: Cow) {
   if (existing[0] && existing[0].updatedAt > record.updatedAt) {
     return { applied: false, current: toCow(existing[0]) };
   }
-  const row = { ...record, farmId };
+  const photos = serializePhotoList(record.photoUrls?.length ? record.photoUrls : record.photoUrl ? [record.photoUrl] : []);
+  const row = {
+    id: record.id,
+    farmId,
+    clientId: record.clientId,
+    tagNumber: record.tagNumber,
+    name: record.name,
+    breed: record.breed,
+    gender: record.gender,
+    birthDate: record.birthDate,
+    motherTag: record.motherTag,
+    status: record.status,
+    kraalId: record.kraalId,
+    photoUrl: photos.photoUrl,
+    photoUrls: photos.photoUrls,
+    notes: record.notes,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+    deletedAt: record.deletedAt,
+  };
   if (existing[0]) {
     await db.update(cows).set(row).where(eq(cows.id, record.id));
   } else {
     await db.insert(cows).values(row);
   }
-  return { applied: true, current: row };
+  return { applied: true, current: toCow(row as typeof cows.$inferSelect) };
 }
 
 export async function listCowsChangedSince(farmId: string, since: string | null) {

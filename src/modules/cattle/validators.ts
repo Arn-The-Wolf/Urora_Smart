@@ -7,6 +7,11 @@ const emptyToNull = (value: unknown) => {
 };
 
 const photoUrlField = z.preprocess(emptyToNull, z.string().trim().max(700_000).nullish());
+const photoUrlsField = z
+  .array(z.string().trim().min(1).max(700_000))
+  .max(6)
+  .optional()
+  .default([]);
 
 export const cowInputSchema = z.object({
   id: z.string().uuid().optional(),
@@ -19,6 +24,7 @@ export const cowInputSchema = z.object({
   motherTag: z.preprocess(emptyToNull, z.string().trim().max(40).nullish()),
   status: z.enum(["active", "sold", "dead"]).default("active"),
   photoUrl: photoUrlField,
+  photoUrls: photoUrlsField,
   notes: z.preprocess(emptyToNull, z.string().trim().max(500).nullish()),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),

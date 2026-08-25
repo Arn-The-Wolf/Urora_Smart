@@ -20,7 +20,7 @@ import {
 import { UroraWordmark } from "@/components/brand/logo";
 import { SyncBadge } from "@/components/sync/sync-badge";
 import { useFarmData } from "@/lib/offline/provider";
-import { roleLabel, isOwner } from "@/lib/roles";
+import { roleLabel, canViewOwnerInsights } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 const workspace = [
@@ -51,11 +51,13 @@ export function Sidebar() {
     .slice(0, 2)
     .toUpperCase();
 
-  const links = isOwner(user.role) ? [...workspace, ...ownerLinks] : workspace;
+  const links = canViewOwnerInsights(user.role) ? [...workspace, ...ownerLinks] : workspace;
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[246px] flex-col bg-[#173d31] px-4 pt-7 pb-5 text-[#d8e6dc] md:flex">
-      <UroraWordmark light />
+      <Link href="/" className="rounded-lg transition hover:opacity-90" aria-label="Urora Smart home">
+        <UroraWordmark light />
+      </Link>
       <div className="mt-8 mb-6 flex items-center gap-2.5 border-y border-[#35604d] px-2 py-3.5">
         <span className="grid size-8 place-items-center rounded-full bg-[#e2b86f] text-[11px] font-bold text-[#294238]">
           {initials}

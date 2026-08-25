@@ -5,7 +5,8 @@ import { Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const MAX_BYTES = 450_000;
+const MAX_BYTES = 420_000;
+const DEFAULT_MAX = 6;
 
 async function fileToDataUrl(file: File): Promise<string> {
   if (!file.type.startsWith("image/")) throw new Error("Please choose an image file (JPEG, PNG, WebP)");
@@ -26,11 +27,12 @@ async function fileToDataUrl(file: File): Promise<string> {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not process image");
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
   if (dataUrl.length > MAX_BYTES * 1.4) throw new Error("Image is too large — try a smaller photo");
   return dataUrl;
 }
 
+/** Single photo — create / replace / delete. */
 export function PhotoUpload({
   label,
   value,
@@ -44,49 +46,96 @@ export function PhotoUpload({
   hint?: string;
   className?: string;
 }) {
+  return (
+    <MultiPhotoUpload
+      label={label}
+      values={value ? [value] : []}
+      onChange={(next) => onChange(next[0] ?? null)}
+      hint={hint}
+      className={className}
+      max={1}
+    />
+  );
+}
+
+/** Multiple photos with add / replace-all / remove-one CRUD. */
+export function MultiPhotoUpload({
+  label,
+  values,
+  onChange,
+  hint,
+  className,
+  max = DEFAULT_MAX,
+}: {
+  label: string;
+  values: string[];
+  onChange: (urls: string[]) => void;
+  hint?: string;
+  className?: string;
+  max?: number;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onPick(file: File | null) {
-    if (!file) return;
+  async function onPick(files: FileList | null) {
+    if (!files?.length) return;
     setBusy(true);
     setError(null);
     try {
-      const dataUrl = await fileToDataUrl(file);
-      onChange(dataUrl);
+      const room = Math.max(0, max - values.length);
+      if (room === 0) throw new Error(`You can add up to ${max} photos`);
+      const picked = Array.from(files).slice(0, room);
+      const urls: string[] = [];
+      for (const file of picked) {
+        urls.push(await fileToDataUrl(file));
+      }
+      onChange([...values, ...urls]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not use this image");
     } finally {
       setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
+  }
+
+  function removeAt(index: number) {
+    onChange(values.filter((_, i) => i !== index));
   }
 
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">{label}</p>
-        {value ? (
-          <button type="button" className="text-xs font-semibold text-destructive" onClick={() => onChange(null)}>
-            Remove
+        <p className="text-sm font-medium">
+          {label}
+          {max > 1 ? (
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              {values.length}/{max}
+            </span>
+          ) : null}
+        </p>
+        {values.length ? (
+          <button type="button" className="text-xs font-semibold text-destructive" onClick={() => onChange([])}>
+            Remove all
           </button>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-start gap-3">
-        {value ? (
-          <div className="relative overflow-hidden rounded-xl border border-border">
+      <div className="flex flex-wrap gap-3">
+        {values.map((url, index) => (
+          <div key={`${index}-${url.slice(0, 24)}`} className="relative overflow-hidden rounded-xl border border-border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt="" className="size-28 object-cover" />
+            <img src={url} alt="" className="size-28 object-cover" />
             <button
               type="button"
               aria-label="Remove photo"
               className="absolute right-1 top-1 grid size-6 place-items-center rounded-full bg-black/50 text-white"
-              onClick={() => onChange(null)}
+              onClick={() => removeAt(index)}
             >
               <X className="size-3.5" />
             </button>
           </div>
-        ) : (
+        ))}
+        {values.length < max ? (
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
@@ -95,22 +144,27 @@ export function PhotoUpload({
           >
             <Camera className="size-6" />
           </button>
-        )}
-        <div className="min-w-0 flex-1 space-y-2">
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => void onPick(e.target.files?.[0] ?? null)}
-          />
+        ) : null}
+      </div>
+      <div className="space-y-2">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          multiple={max > 1}
+          className="hidden"
+          onChange={(e) => void onPick(e.target.files)}
+        />
+        {values.length < max ? (
           <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => inputRef.current?.click()}>
-            {busy ? "Processing…" : value ? "Replace photo" : "Upload photo"}
+            {busy ? "Processing…" : values.length ? "Add more photos" : "Upload photo"}
           </Button>
-          <p className="text-xs text-muted-foreground">{hint ?? "Ear tag, sick cow, or medicine bottle — stored on this farm."}</p>
-          {error ? <p className="text-xs text-destructive">{error}</p> : null}
-        </div>
+        ) : null}
+        <p className="text-xs text-muted-foreground">
+          {hint ?? (max > 1 ? "Add several photos — ear tag, side view, any notes that help." : "Stored on this farm.")}
+        </p>
+        {error ? <p className="text-xs text-destructive">{error}</p> : null}
       </div>
     </div>
   );

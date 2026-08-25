@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/forms/field";
-import { PhotoUpload } from "@/components/forms/photo-upload";
+import { MultiPhotoUpload } from "@/components/forms/photo-upload";
 import { useFarmData } from "@/lib/offline/provider";
 import type { Cow } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ export function CowForm({ cow }: { cow?: Cow }) {
   const [error, setError] = useState<string | null>(null);
   const [gender, setGender] = useState(cow?.gender ?? "female");
   const [status, setStatus] = useState(cow?.status ?? "active");
-  const [photoUrl, setPhotoUrl] = useState<string | null>(cow?.photoUrl ?? null);
+  const [photoUrls, setPhotoUrls] = useState<string[]>(cow?.photoUrls?.length ? cow.photoUrls : cow?.photoUrl ? [cow.photoUrl] : []);
 
   async function onSubmit(formData: FormData) {
     setSaving(true);
@@ -34,7 +34,8 @@ export function CowForm({ cow }: { cow?: Cow }) {
           birthDate: String(formData.get("birthDate") ?? "") || null,
           motherTag: String(formData.get("motherTag") ?? ""),
           status,
-          photoUrl,
+          photoUrl: photoUrls[0] ?? null,
+          photoUrls,
           notes: String(formData.get("notes") ?? ""),
         },
         cow?.id,
@@ -112,7 +113,12 @@ export function CowForm({ cow }: { cow?: Cow }) {
         </div>
       </div>
 
-      <PhotoUpload label="Cow photo" value={photoUrl} onChange={setPhotoUrl} hint="Ear tag or profile photo — helps workers spot the right animal." />
+      <MultiPhotoUpload
+        label="Cow photos"
+        values={photoUrls}
+        onChange={setPhotoUrls}
+        hint="Add ear tag, side view, and any other photos — create, replace, or remove anytime."
+      />
 
       <Field label="Notes" htmlFor="notes">
         <Textarea id="notes" name="notes" defaultValue={cow?.notes ?? ""} rows={4} placeholder="Temperament, history, anything useful…" />

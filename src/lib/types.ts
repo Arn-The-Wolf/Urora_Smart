@@ -63,6 +63,7 @@ export type Cow = {
   status: CowStatus;
   kraalId: string | null;
   photoUrl: string | null;
+  photoUrls: string[];
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -122,6 +123,7 @@ export type HealthEvent = {
   isolated: boolean;
   milkWithholdUntil: string | null;
   photoUrl: string | null;
+  photoUrls: string[];
   notes: string | null;
   createdAt: string;
   updatedAt: string;

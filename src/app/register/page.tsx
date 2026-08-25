@@ -7,7 +7,7 @@ export default async function RegisterPage() {
   const session = await getSession();
   if (session) redirect("/dashboard");
   return (
-    <AuthFrame title="Start your farm workspace." subtitle="Create your account and bring milk, health, stock, and the wash schedule together.">
+    <AuthFrame title="Start your farm workspace." subtitle="You’ll register as the farm owner. Add operators later for field work while you keep money and reports.">
       <RegisterForm />
     </AuthFrame>
   );

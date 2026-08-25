@@ -147,7 +147,12 @@ export function FarmDataProvider({
         motherTag: input.motherTag ?? null,
         status: (input.status ?? "active") as CowStatus,
         kraalId: existing?.kraalId ?? null,
-        photoUrl: input.photoUrl ?? existing?.photoUrl ?? null,
+        photoUrl: (input.photoUrls?.[0] ?? input.photoUrl ?? existing?.photoUrl) ?? null,
+        photoUrls: input.photoUrls?.length
+          ? input.photoUrls
+          : input.photoUrl
+            ? [input.photoUrl]
+            : existing?.photoUrls ?? [],
         notes: input.notes ?? null,
         createdAt: existing?.createdAt ?? now,
         updatedAt: now,

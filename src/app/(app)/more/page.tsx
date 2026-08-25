@@ -12,11 +12,11 @@ import {
   Wallet,
 } from "lucide-react";
 import { getSession } from "@/lib/auth/session";
-import { roleLabel, isOwner } from "@/lib/roles";
+import { roleLabel, canViewOwnerInsights } from "@/lib/roles";
 
 export default async function MorePage() {
   const session = await getSession();
-  const owner = session ? isOwner(session.user.role) : false;
+  const owner = session ? canViewOwnerInsights(session.user.role) : false;
 
   const links = [
     { href: "/alerts", label: "Alerts", icon: Bell, text: "Withhold, reorder, expiry, milk, cows" },

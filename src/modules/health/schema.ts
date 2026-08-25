@@ -19,6 +19,7 @@ export const healthEvents = pgTable("health_events", {
   isolated: integer("isolated").notNull().default(0),
   milkWithholdUntil: text("milk_withhold_until"),
   photoUrl: text("photo_url"),
+  photoUrls: text("photo_urls"),
   notes: text("notes"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),

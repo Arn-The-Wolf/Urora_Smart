@@ -17,7 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-full md:pl-[246px]">
       <Sidebar />
       <header className="flex items-center justify-between bg-[#173d31] px-5 py-4 text-white md:hidden">
-        <Link href="/" className="flex items-center gap-2 rounded-lg transition hover:opacity-90">
+        <Link href="/" className="flex items-center gap-2 rounded-lg transition hover:opacity-90" aria-label="Urora Smart home">
           <UroraMark />
           <strong className="text-xl tracking-[-1px]">Urora Smart</strong>
         </Link>
@@ -38,6 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-[10px] border border-[#dfe8df] bg-white px-3.5 py-2 text-sm font-bold text-[#176b45] shadow-sm transition hover:border-[#b9cbbd] hover:bg-[#f6faf5]"
+            aria-label="Urora Smart home"
           >
             <UroraMark />
             Urora Smart

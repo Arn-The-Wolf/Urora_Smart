@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/forms/field";
 import { useFarmData } from "@/lib/offline/provider";
+import { canManageFarm, roleLabel } from "@/lib/roles";
 import type { Kraal } from "@/modules/kraals/service";
 
 export function SettingsView({ kraals }: { kraals: Kraal[] }) {
   const router = useRouter();
   const { farm, user, pending, online, syncNow } = useFarmData();
+  const owner = canManageFarm(user.role);
   const [name, setName] = useState(farm.name);
   const [location, setLocation] = useState(farm.location ?? "");
   const [digestPhone, setDigestPhone] = useState(farm.digestPhone ?? "");
@@ -21,6 +23,7 @@ export function SettingsView({ kraals }: { kraals: Kraal[] }) {
 
   async function onSave(event: FormEvent) {
     event.preventDefault();
+    if (!owner) return;
     setSaving(true);
     try {
       const response = await fetch("/api/farm", {
@@ -46,7 +49,7 @@ export function SettingsView({ kraals }: { kraals: Kraal[] }) {
 
   async function addKraal(event: FormEvent) {
     event.preventDefault();
-    if (!kraalName.trim()) return;
+    if (!owner || !kraalName.trim()) return;
     const response = await fetch("/api/kraals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -72,51 +75,66 @@ export function SettingsView({ kraals }: { kraals: Kraal[] }) {
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-3xl tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Farm, kraals, digests, and sync.</p>
+        <p className="text-muted-foreground">
+          {owner
+            ? "Farm profile, kraals, digests, and sync."
+            : "Your account and sync. Farm profile is managed by the owner."}
+        </p>
       </div>
 
-      <form onSubmit={onSave} className="space-y-4 rounded-3xl bg-card p-5 ring-1 ring-foreground/8">
-        <Field label="Farm name">
-          <Input value={name} onChange={(event) => setName(event.target.value)} className="h-12" />
-        </Field>
-        <Field label="Location">
-          <Input
-            value={location}
-            onChange={(event) => setLocation(event.target.value)}
-            className="h-12"
-            placeholder="Nyagatare, Rwanda"
-          />
-        </Field>
-        <Field label="Owner phone (SMS / WhatsApp digests)">
-          <Input
-            value={digestPhone}
-            onChange={(event) => setDigestPhone(event.target.value)}
-            className="h-12"
-            placeholder="+2507…"
-          />
-        </Field>
-        <Field label="Digest channel">
-          <select
-            value={digestChannel}
-            onChange={(e) => setDigestChannel(e.target.value)}
-            className="h-12 w-full rounded-[9px] border border-border bg-input px-3"
-          >
-            <option value="none">Off for now</option>
-            <option value="sms">SMS (ready when gateway connected)</option>
-            <option value="whatsapp">WhatsApp (ready when gateway connected)</option>
-          </select>
-        </Field>
-        <p className="text-xs text-muted-foreground">
-          Digests will send daily milk totals and critical alerts. Wire a provider (Africa’s Talking / Twilio) with env keys to go live.
-        </p>
-        <Button type="submit" disabled={saving} className="h-11 w-full">
-          {saving ? "Saving…" : "Save farm"}
-        </Button>
-      </form>
+      {owner ? (
+        <form onSubmit={onSave} className="space-y-4 rounded-3xl bg-card p-5 ring-1 ring-foreground/8">
+          <Field label="Farm name">
+            <Input value={name} onChange={(event) => setName(event.target.value)} className="h-12" />
+          </Field>
+          <Field label="Location">
+            <Input
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+              className="h-12"
+              placeholder="Nyagatare, Rwanda"
+            />
+          </Field>
+          <Field label="Owner phone (SMS / WhatsApp digests)">
+            <Input
+              value={digestPhone}
+              onChange={(event) => setDigestPhone(event.target.value)}
+              className="h-12"
+              placeholder="+2507…"
+            />
+          </Field>
+          <Field label="Digest channel">
+            <select
+              value={digestChannel}
+              onChange={(e) => setDigestChannel(e.target.value)}
+              className="h-12 w-full rounded-[9px] border border-border bg-input px-3"
+            >
+              <option value="none">Off for now</option>
+              <option value="sms">SMS (ready when gateway connected)</option>
+              <option value="whatsapp">WhatsApp (ready when gateway connected)</option>
+            </select>
+          </Field>
+          <p className="text-xs text-muted-foreground">
+            Digests will send daily milk totals and critical alerts. Wire a provider (Africa’s Talking / Twilio) with env keys to go live.
+          </p>
+          <Button type="submit" disabled={saving} className="h-11 w-full">
+            {saving ? "Saving…" : "Save farm"}
+          </Button>
+        </form>
+      ) : (
+        <section className="space-y-2 rounded-3xl bg-card p-5 ring-1 ring-foreground/8">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">This farm</p>
+          <p className="font-heading text-xl">{farm.name}</p>
+          <p className="text-sm text-muted-foreground">{farm.location ?? "Location not set"}</p>
+          <p className="pt-2 text-xs text-muted-foreground">Ask the farm owner to change farm details or kraals.</p>
+        </section>
+      )}
 
       <section className="space-y-3 rounded-3xl bg-card p-5 ring-1 ring-foreground/8">
         <h2 className="text-sm font-semibold">Kraals / sites</h2>
-        <p className="text-xs text-muted-foreground">Multiple kraals under one farm — assign cows later as needed.</p>
+        <p className="text-xs text-muted-foreground">
+          {owner ? "Multiple kraals under one farm — assign cows later as needed." : "Sites on this farm (view only)."}
+        </p>
         <ul className="space-y-2">
           {kraals.map((kraal) => (
             <li key={kraal.id} className="rounded-xl border border-border px-3 py-2 text-sm">
@@ -125,23 +143,27 @@ export function SettingsView({ kraals }: { kraals: Kraal[] }) {
           ))}
           {kraals.length === 0 ? <li className="text-sm text-muted-foreground">No kraals yet.</li> : null}
         </ul>
-        <form onSubmit={addKraal} className="flex gap-2">
-          <Input
-            value={kraalName}
-            onChange={(e) => setKraalName(e.target.value)}
-            placeholder="Main kraal / young stock…"
-            className="h-11"
-          />
-          <Button type="submit" className="h-11 shrink-0">
-            Add
-          </Button>
-        </form>
+        {owner ? (
+          <form onSubmit={addKraal} className="flex gap-2">
+            <Input
+              value={kraalName}
+              onChange={(e) => setKraalName(e.target.value)}
+              placeholder="Main kraal / young stock…"
+              className="h-11"
+            />
+            <Button type="submit" className="h-11 shrink-0">
+              Add
+            </Button>
+          </form>
+        ) : null}
       </section>
 
       <section className="rounded-3xl bg-card p-5 ring-1 ring-foreground/8">
         <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Signed in</p>
         <p className="mt-1 font-heading text-xl">{user.name}</p>
-        <p className="text-sm text-muted-foreground">{user.email}</p>
+        <p className="text-sm text-muted-foreground">
+          {user.email} · {roleLabel(user.role)}
+        </p>
         <p className="mt-3 text-sm">
           {online ? "Online" : "Offline"} · {pending} change{pending === 1 ? "" : "s"} waiting to sync
         </p>

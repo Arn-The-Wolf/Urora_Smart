@@ -25,5 +25,5 @@ export async function GET() {
       ready: Boolean(session.farm.digestPhone && session.farm.digestChannel),
       message,
     });
-  });
+  }, ["owner"]);
 }

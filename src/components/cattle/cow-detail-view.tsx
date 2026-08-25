@@ -50,10 +50,14 @@ export function CowDetailView({ cowId }: { cowId: string }) {
   return (
     <div className="space-y-6">
       <div className="animate-fade-up">
-        {cow.photoUrl ? (
-          <div className="mb-4 overflow-hidden rounded-2xl border border-border">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={cow.photoUrl} alt="" className="max-h-56 w-full object-cover" />
+        {cow.photoUrls?.length || cow.photoUrl ? (
+          <div className="mb-4 grid gap-2 sm:grid-cols-2">
+            {(cow.photoUrls?.length ? cow.photoUrls : cow.photoUrl ? [cow.photoUrl] : []).map((url, index) => (
+              <div key={`${index}-${url.slice(0, 20)}`} className="overflow-hidden rounded-2xl border border-border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" className="max-h-56 w-full object-cover" />
+              </div>
+            ))}
           </div>
         ) : null}
         <p className="font-mono text-sm font-bold text-primary">{cow.tagNumber}</p>

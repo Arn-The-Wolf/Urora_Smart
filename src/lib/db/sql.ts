@@ -74,6 +74,7 @@ export const SCHEMA_STATEMENTS = [
     )`,
   `ALTER TABLE health_events ADD COLUMN IF NOT EXISTS milk_withhold_until TEXT`,
   `ALTER TABLE health_events ADD COLUMN IF NOT EXISTS photo_url TEXT`,
+  `ALTER TABLE health_events ADD COLUMN IF NOT EXISTS photo_urls TEXT`,
   `ALTER TABLE farms ADD COLUMN IF NOT EXISTS digest_phone TEXT`,
   `ALTER TABLE farms ADD COLUMN IF NOT EXISTS digest_channel TEXT`,
   `CREATE TABLE IF NOT EXISTS kraals (
@@ -85,6 +86,7 @@ export const SCHEMA_STATEMENTS = [
     )`,
   `ALTER TABLE cows ADD COLUMN IF NOT EXISTS kraal_id TEXT`,
   `ALTER TABLE cows ADD COLUMN IF NOT EXISTS photo_url TEXT`,
+  `ALTER TABLE cows ADD COLUMN IF NOT EXISTS photo_urls TEXT`,
   `CREATE TABLE IF NOT EXISTS breeding_events (
       id TEXT PRIMARY KEY,
       farm_id TEXT NOT NULL REFERENCES farms(id),

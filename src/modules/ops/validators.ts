@@ -17,6 +17,7 @@ export const healthInputSchema = z.object({
   isolated: z.coerce.boolean().optional(),
   milkWithholdUntil: z.preprocess(emptyToNull, z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish()),
   photoUrl: z.preprocess(emptyToNull, z.string().trim().max(700_000).nullish()),
+  photoUrls: z.array(z.string().trim().min(1).max(700_000)).max(6).optional().default([]),
   notes: z.preprocess(emptyToNull, z.string().trim().max(500).nullish()),
 });
 
