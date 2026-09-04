@@ -6,8 +6,10 @@ import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { MilkWeekGraph } from "@/components/cattle/milk-week-graph";
 import { useFarmData } from "@/lib/offline/provider";
 import { ageLabel, statusLabel } from "@/lib/format";
+import { addDays, todayInKigali } from "@/lib/dates";
 import type { CowStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +21,29 @@ const filters: { id: "all" | CowStatus; label: string }[] = [
 ];
 
 export function CattleView() {
-  const { cows } = useFarmData();
+  const { cows, milkings } = useFarmData();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | CowStatus>("all");
+  const today = todayInKigali();
+
+  const weekByCow = useMemo(() => {
+    const map = new Map<string, { date: string; liters: number }[]>();
+    for (const cow of cows) {
+      map.set(
+        cow.id,
+        Array.from({ length: 7 }, (_, index) => {
+          const date = addDays(today, index - 6);
+          return {
+            date,
+            liters: milkings
+              .filter((row) => row.cowId === cow.id && row.date === date)
+              .reduce((sum, row) => sum + row.liters, 0),
+          };
+        }),
+      );
+    }
+    return map;
+  }, [cows, milkings, today]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -72,32 +94,43 @@ export function CattleView() {
       </div>
 
       <div className="stagger-in grid gap-3 md:grid-cols-2">
-        {filtered.map((cow) => (
-          <Link
-            key={cow.id}
-            href={`/cattle/${cow.id}`}
-            className="flex items-center justify-between gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition hover:ring-primary/30"
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              {cow.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={cow.photoUrl} alt="" className="size-14 shrink-0 rounded-xl object-cover ring-1 ring-foreground/8" />
-              ) : (
-                <span className="grid size-14 shrink-0 place-items-center rounded-xl bg-[#e4f0e4] text-lg font-bold text-primary">
-                  {(cow.name?.[0] ?? cow.tagNumber.slice(-2)).toUpperCase()}
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="font-mono text-xs font-bold tracking-wide text-primary">{cow.tagNumber}</p>
-                <p className="truncate font-heading text-xl">{cow.name ?? "Unnamed"}</p>
-                <p className="text-sm text-muted-foreground">
-                  {[cow.breed, cow.gender === "female" ? "Female" : "Male", ageLabel(cow.birthDate)].filter(Boolean).join(" · ")}
-                </p>
+        {filtered.map((cow) => {
+          const showMilk = cow.gender === "female" && cow.status === "active";
+          const days = weekByCow.get(cow.id) ?? [];
+          return (
+            <Link
+              key={cow.id}
+              href={`/cattle/${cow.id}`}
+              className="rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition hover:ring-primary/30"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  {cow.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={cow.photoUrl} alt="" className="size-14 shrink-0 rounded-xl object-cover ring-1 ring-foreground/8" />
+                  ) : (
+                    <span className="grid size-14 shrink-0 place-items-center rounded-xl bg-[#e4f0e4] text-lg font-bold text-primary">
+                      {(cow.name?.[0] ?? cow.tagNumber.slice(-2)).toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-mono text-xs font-bold tracking-wide text-primary">{cow.tagNumber}</p>
+                    <p className="truncate font-heading text-xl">{cow.name ?? "Unnamed"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {[cow.breed, cow.gender === "female" ? "Female" : "Male", ageLabel(cow.birthDate)].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant={cow.status === "active" ? "default" : "secondary"}>{statusLabel(cow.status)}</Badge>
               </div>
-            </div>
-            <Badge variant={cow.status === "active" ? "default" : "secondary"}>{statusLabel(cow.status)}</Badge>
-          </Link>
-        ))}
+              {showMilk ? (
+                <div className="mt-3 border-t border-[#edf1ed] pt-3">
+                  <MilkWeekGraph days={days} compact />
+                </div>
+              ) : null}
+            </Link>
+          );
+        })}
       </div>
 
       {filtered.length === 0 ? (

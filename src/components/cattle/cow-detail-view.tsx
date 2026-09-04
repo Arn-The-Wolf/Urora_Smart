@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { MilkWeekGraph } from "@/components/cattle/milk-week-graph";
 import { useFarmData } from "@/lib/offline/provider";
 import { ageLabel, cowLabel, formatLiters, statusLabel } from "@/lib/format";
 import { addDays, formatShortDate, sessionLabel, todayInKigali } from "@/lib/dates";
@@ -24,7 +25,6 @@ export function CowDetailView({ cowId }: { cowId: string }) {
       liters: records.filter((row) => row.date === date).reduce((sum, row) => sum + row.liters, 0),
     };
   });
-  const maxBar = Math.max(...last7.map((d) => d.liters), 1);
 
   if (!cow) {
     return (
@@ -73,19 +73,8 @@ export function CowDetailView({ cowId }: { cowId: string }) {
       </div>
 
       {cow.gender === "female" && cow.status === "active" ? (
-        <section className="rounded-3xl bg-card p-5 ring-1 ring-foreground/8 animate-scale-in delay-1">
-          <h2 className="font-heading text-xl">Milk this week</h2>
-          <div className="mt-4 flex h-28 items-end gap-2">
-            {last7.map((day) => (
-              <div key={day.date} className="flex flex-1 flex-col items-center gap-2">
-                <div
-                  className={cn("w-full rounded-full bg-primary/80 transition-all duration-700", day.date === today && "bg-primary")}
-                  style={{ height: `${Math.max(8, (day.liters / maxBar) * 100)}%` }}
-                />
-                <span className="text-[10px] font-bold uppercase text-muted-foreground">{formatShortDate(day.date).slice(0, 3)}</span>
-              </div>
-            ))}
-          </div>
+        <section className="rounded-3xl bg-card p-5 ring-1 ring-foreground/8">
+          <MilkWeekGraph days={last7} />
         </section>
       ) : null}
 
