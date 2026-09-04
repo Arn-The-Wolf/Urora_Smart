@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — boots to login.
+Open [http://localhost:3000](http://localhost:3000) locally, or production at [https://spring-farms.vercel.app](https://spring-farms.vercel.app) — boots to login.
 
 Demo accounts (password `farm1234` for both):
 
