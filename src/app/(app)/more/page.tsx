@@ -3,13 +3,13 @@ import {
   Bell,
   ClipboardList,
   Droplets,
-  FileBarChart,
   Heart,
   History,
   Package,
   Settings,
   SprayCan,
   Wallet,
+  Beef,
 } from "lucide-react";
 import { getSession } from "@/lib/auth/session";
 import { roleLabel, canViewOwnerInsights } from "@/lib/roles";
@@ -18,25 +18,25 @@ export default async function MorePage() {
   const session = await getSession();
   const owner = session ? canViewOwnerInsights(session.user.role) : false;
 
-  const links = [
-    { href: "/alerts", label: "Alerts", icon: Bell, text: "Withhold, reorder, expiry, milk, cows" },
-    { href: "/breeding", label: "Breeding & calving", icon: Heart, text: "Heat, AI, dry-off, calving dates" },
-    { href: "/milk", label: "Milking records", icon: Droplets, text: "Sessions and daily totals" },
-    { href: "/stock", label: "Store", icon: Package, text: "Feed, medicines, salt, expiry" },
-    { href: "/wash", label: "Wash & dip", icon: SprayCan, text: "Chemically treated water" },
-    { href: "/schedule", label: "Schedule", icon: ClipboardList, text: "Today’s farm checklist" },
-    ...(owner
-      ? [
-          { href: "/finance", label: "Money", icon: Wallet, text: "Milk sales and farm expenses" },
-          { href: "/reports", label: "Reports", icon: FileBarChart, text: "Daily and monthly · export CSV" },
-          { href: "/activity", label: "Activity log", icon: History, text: "Who logged what, when" },
-        ]
-      : []),
-    { href: "/settings", label: "Settings", icon: Settings, text: "Farm profile, digests, sign out" },
-  ];
+  const links = owner
+    ? [
+        { href: "/cattle", label: "Herd", icon: Beef, text: "Your cows at a glance" },
+        { href: "/finance", label: "Money", icon: Wallet, text: "Sales and expenses" },
+        { href: "/activity", label: "Team activity", icon: History, text: "What operators logged" },
+        { href: "/settings", label: "Farms & settings", icon: Settings, text: "Switch farms, profile, digests" },
+      ]
+    : [
+        { href: "/breeding", label: "Breeding & calving", icon: Heart, text: "Heat, AI, dry-off, calving dates" },
+        { href: "/milk", label: "Milking records", icon: Droplets, text: "Sessions and daily totals" },
+        { href: "/stock", label: "Store", icon: Package, text: "Feed, medicines, salt, expiry" },
+        { href: "/wash", label: "Wash & dip", icon: SprayCan, text: "Chemically treated water" },
+        { href: "/schedule", label: "Schedule", icon: ClipboardList, text: "Today’s farm checklist" },
+        { href: "/alerts", label: "Alerts", icon: Bell, text: "Withhold, reorder, expiry, milk, cows" },
+        { href: "/settings", label: "Settings", icon: Settings, text: "Account and sync" },
+      ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 page-enter">
       <div>
         <h1 className="text-[28px] tracking-[-1px]">More</h1>
         {session ? (

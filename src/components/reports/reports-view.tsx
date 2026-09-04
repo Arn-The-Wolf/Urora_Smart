@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/forms/field";
+import { CardSkeleton } from "@/components/loading/page-loader";
 import { todayInKigali } from "@/lib/dates";
 import { formatLiters } from "@/lib/format";
 import type { DailyReport, MonthlyReport } from "@/lib/types";
@@ -16,6 +18,7 @@ export function ReportsView() {
   const [daily, setDaily] = useState<DailyReport | null>(null);
   const [monthly, setMonthly] = useState<MonthlyReport | null>(null);
   const [loading, setLoading] = useState(false);
+  const [booting, setBooting] = useState(true);
 
   async function load() {
     setLoading(true);
@@ -30,6 +33,7 @@ export function ReportsView() {
       toast.error(error instanceof Error ? error.message : "Could not load report");
     } finally {
       setLoading(false);
+      setBooting(false);
     }
   }
 
@@ -39,7 +43,7 @@ export function ReportsView() {
   }, []);
 
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div>
         <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">OWNER VIEW</p>
         <h1 className="text-[28px] tracking-[-1px]">Farm reports</h1>
@@ -67,9 +71,9 @@ export function ReportsView() {
             <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="h-12 bg-input" />
           </Field>
         )}
-        <Button className="h-12 self-end" disabled={loading} onClick={() => void load()}>
-          {loading ? "Building…" : "Generate report"}
-        </Button>
+        <BusyButton className="h-12 self-end" busy={loading} busyLabel="Building…" onClick={() => void load()}>
+          Generate report
+        </BusyButton>
         <Button
           className="h-12 self-end"
           variant="outline"
@@ -117,6 +121,14 @@ export function ReportsView() {
           Export CSV
         </Button>
       </div>
+
+      {booting || (loading && !daily && !monthly) ? (
+        <div className="grid gap-3 md:grid-cols-3">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      ) : null}
 
       {kind === "daily" && daily ? (
         <div className="grid gap-3 md:grid-cols-3">

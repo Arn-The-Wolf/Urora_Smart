@@ -13,7 +13,7 @@ const tone = {
 
 export function AlertsView({ alerts }: { alerts: FarmAlert[] }) {
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div>
         <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">ALERTS</p>
         <h1 className="text-[28px] tracking-[-1px]">

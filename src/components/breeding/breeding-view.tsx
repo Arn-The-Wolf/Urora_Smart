@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/forms/field";
@@ -73,7 +74,7 @@ export function BreedingView({ events, cows }: { events: BreedingEvent[]; cows: 
   }
 
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div>
         <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">REPRODUCTION</p>
         <h1 className="text-[28px] tracking-[-1px]">
@@ -83,7 +84,7 @@ export function BreedingView({ events, cows }: { events: BreedingEvent[]; cows: 
           </span>
         </h1>
         <p className="text-sm text-muted-foreground">
-          Log heat and AI — Urora Smart suggests expected calving (~280 days) and dry-off (~60 days before).
+          Log heat and AI — Spring Farms suggests expected calving (~280 days) and dry-off (~60 days before).
         </p>
       </div>
 
@@ -121,9 +122,9 @@ export function BreedingView({ events, cows }: { events: BreedingEvent[]; cows: 
         <Field label="Notes" className="md:col-span-2">
           <Textarea name="notes" />
         </Field>
-        <Button type="submit" disabled={saving} className="h-11 md:col-span-2">
-          {saving ? "Saving…" : "Save breeding event"}
-        </Button>
+        <BusyButton type="submit" busy={saving} busyLabel="Saving…" className="h-11 md:col-span-2">
+          Save breeding event
+        </BusyButton>
       </form>
 
       <div className="overflow-hidden rounded-[15px] border border-border bg-card">

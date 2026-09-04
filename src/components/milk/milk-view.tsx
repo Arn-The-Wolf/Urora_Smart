@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { useFarmData } from "@/lib/offline/provider";
 import { cowLabel, formatLiters } from "@/lib/format";
@@ -65,7 +66,7 @@ export function MilkView() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div className="flex items-end justify-between animate-fade-up">
         <div>
           <h1 className="font-heading text-3xl tracking-tight">Milk</h1>
@@ -106,9 +107,9 @@ export function MilkView() {
           <Input type="number" step="0.1" min="0" value={liters} onChange={(e) => setLiters(e.target.value)} className="h-11" />
           <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes" className="h-11" />
           <div className="flex gap-2">
-            <Button type="button" disabled={saving} onClick={() => void onSaveEdit()} className="h-10">
-              {saving ? "Saving…" : "Save"}
-            </Button>
+            <BusyButton type="button" busy={saving} busyLabel="Saving…" onClick={() => void onSaveEdit()} className="h-10">
+              Save
+            </BusyButton>
             <Button type="button" variant="outline" className="h-10" onClick={() => setEditing(null)}>
               Cancel
             </Button>

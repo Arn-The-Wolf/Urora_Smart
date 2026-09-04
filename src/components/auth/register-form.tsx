@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/auth/password-input";
 import { Field } from "@/components/forms/field";
@@ -42,7 +42,7 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4 animate-fade-up">
       <Field label="Farm name" htmlFor="farmName">
         <Input id="farmName" name="farmName" required className="h-12" placeholder="Nyagatare Hills Dairy" />
       </Field>
@@ -59,9 +59,9 @@ export function RegisterForm() {
         <PasswordInput id="password" name="password" required minLength={8} />
       </Field>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button type="submit" disabled={loading} className="h-12 w-full text-base">
-        {loading ? "Creating farm…" : "Create farm"}
-      </Button>
+      <BusyButton type="submit" busy={loading} busyLabel="Creating farm…" className="h-12 w-full text-base">
+        Create farm
+      </BusyButton>
       <p className="text-center text-sm text-muted-foreground">
         Already have a ledger?{" "}
         <Link href="/login" className="font-semibold text-primary">

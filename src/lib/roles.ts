@@ -19,7 +19,7 @@ export function isOperator(role: UserRole): boolean {
   return role === "operator";
 }
 
-/** Money, reports, and activity — farm owner only. */
+/** Money and activity — farm owner only. */
 export function canViewOwnerInsights(role: UserRole): boolean {
   return role === "owner";
 }
@@ -43,4 +43,4 @@ export const SHARED_WORKSPACE_PATHS = [
   "/settings",
 ] as const;
 
-export const OWNER_ONLY_PATHS = ["/finance", "/reports", "/activity"] as const;
+export const OWNER_ONLY_PATHS = ["/finance", "/activity"] as const;

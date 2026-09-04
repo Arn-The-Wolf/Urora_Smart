@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/api";
 import { createCow, listCows } from "@/modules/cattle/service";
+import { logActivity } from "@/modules/activity/service";
 import type { CowStatus } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -15,6 +16,14 @@ export async function POST(request: Request) {
   const body = await request.json();
   return withAuth(async (session) => {
     const cow = await createCow(session.farm.id, body);
+    await logActivity(session.farm.id, {
+      userId: session.user.id,
+      userName: session.user.name,
+      action: "created",
+      entity: "cow",
+      entityId: cow.id,
+      detail: `${cow.tagNumber}${cow.name ? ` · ${cow.name}` : ""}`,
+    });
     return NextResponse.json({ cow }, { status: 201 });
   });
 }

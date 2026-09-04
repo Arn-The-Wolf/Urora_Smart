@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/forms/field";
 import { formatShortDate, todayInKigali } from "@/lib/dates";
@@ -55,7 +56,7 @@ export function FinanceView({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div>
         <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">OWNER VIEW</p>
         <h1 className="text-[28px] tracking-[-1px]">Money · milk sales & expenses</h1>
@@ -119,9 +120,9 @@ export function FinanceView({
         <Field label="Notes" className="md:col-span-2">
           <Input name="notes" className="h-12 bg-input" />
         </Field>
-        <Button type="submit" disabled={saving} className="h-11 md:col-span-2">
-          {saving ? "Saving…" : tab === "sale" ? "Record sale" : "Record expense"}
-        </Button>
+        <BusyButton type="submit" busy={saving} busyLabel="Saving…" className="h-11 md:col-span-2">
+          {tab === "sale" ? "Record sale" : "Record expense"}
+        </BusyButton>
       </form>
 
       <div className="grid gap-4 md:grid-cols-2">

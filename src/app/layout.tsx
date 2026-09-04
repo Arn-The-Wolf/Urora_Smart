@@ -11,15 +11,15 @@ const geist = Geist({
 
 export const metadata: Metadata = {
   title: {
-    default: "Urora Smart",
-    template: "%s · Urora Smart",
+    default: "Spring Farms",
+    template: "%s · Spring Farms",
   },
-  description: "Cattle, milk, health, stock, and daily farm work in one calm workspace. Built for farms in Rwanda.",
-  applicationName: "Urora Smart",
+  description: "Cattle, milk, health, stock, and daily farm work in one calm workspace.",
+  applicationName: "Spring Farms",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Urora Smart",
+    title: "Spring Farms",
   },
   formatDetection: { telephone: false },
 };

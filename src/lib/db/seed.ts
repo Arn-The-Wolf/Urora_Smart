@@ -12,6 +12,35 @@ type SeedDb = PgliteDatabase<typeof schema> | NeonHttpDatabase<typeof schema>;
 const DEMO_EMAIL = "farmer@urora.farm";
 const LEGACY_DEMO_EMAIL = "farmer@inka.rw";
 
+/** Local cattle photos (verified cows — not landscapes / other animals). */
+const COW_PHOTOS = [
+  "/images/herd/cow-01.jpg",
+  "/images/herd/cow-02.jpg",
+  "/images/herd/cow-03.jpg",
+  "/images/herd/cow-04.jpg",
+  "/images/herd/cow-05.jpg",
+  "/images/herd/cow-06.jpg",
+  "/images/herd/cow-07.jpg",
+  "/images/herd/cow-08.jpg",
+] as const;
+
+/** Old remote URLs that were not cattle — always replace. */
+const BAD_COW_PHOTO_MARKERS = [
+  "photo-1500595046743",
+  "photo-1560493676",
+  "photo-1464226184884",
+  "photo-1546445317",
+  "photo-1527156238897",
+  "photo-1596733436284",
+  "photo-1516467508483",
+  "photo-1563207153",
+  "photo-1516466723877",
+  "photo-1560743173",
+  "photo-1605281317010",
+  "photo-1474511320723",
+  "images.unsplash.com",
+];
+
 const herd = [
   {
     tagNumber: "RW-0142",
@@ -23,6 +52,7 @@ const herd = [
     status: "active" as const,
     notes: "Lead milker. Calm in the morning session.",
     base: 9.4,
+    photo: COW_PHOTOS[0],
   },
   {
     tagNumber: "RW-0208",
@@ -34,6 +64,7 @@ const herd = [
     status: "active" as const,
     notes: "Steady producer. Prefers midday milking first.",
     base: 12.1,
+    photo: COW_PHOTOS[1],
   },
   {
     tagNumber: "RW-0311",
@@ -45,6 +76,7 @@ const herd = [
     status: "active" as const,
     notes: "Daughter of Nyiramuhire. Rich cream.",
     base: 7.8,
+    photo: COW_PHOTOS[2],
   },
   {
     tagNumber: "RW-0404",
@@ -56,6 +88,7 @@ const herd = [
     status: "active" as const,
     notes: null,
     base: 10.2,
+    photo: COW_PHOTOS[3],
   },
   {
     tagNumber: "RW-0519",
@@ -67,6 +100,7 @@ const herd = [
     status: "active" as const,
     notes: "Young. Still climbing.",
     base: 6.4,
+    photo: COW_PHOTOS[4],
   },
   {
     tagNumber: "RW-0622",
@@ -78,6 +112,7 @@ const herd = [
     status: "active" as const,
     notes: "Ate less yesterday — watch the next milking.",
     base: 8.1,
+    photo: COW_PHOTOS[5],
   },
   {
     tagNumber: "RW-0701",
@@ -89,6 +124,7 @@ const herd = [
     status: "active" as const,
     notes: "Herd bull. No milking records.",
     base: 0,
+    photo: COW_PHOTOS[6],
   },
   {
     tagNumber: "RW-0888",
@@ -100,8 +136,36 @@ const herd = [
     status: "sold" as const,
     notes: "Sold to a neighbour in Kayonza, March 2026.",
     base: 0,
+    photo: COW_PHOTOS[7],
   },
 ];
+
+function cowPhotoFor(tagNumber: string, index: number) {
+  const match = herd.find((item) => item.tagNumber === tagNumber);
+  return match?.photo ?? COW_PHOTOS[index % COW_PHOTOS.length];
+}
+
+function needsCowPhotoFix(photoUrl: string | null | undefined) {
+  if (!photoUrl) return true;
+  if (photoUrl.startsWith("data:")) return false;
+  if (photoUrl.startsWith("/images/herd/")) return false;
+  return BAD_COW_PHOTO_MARKERS.some((marker) => photoUrl.includes(marker)) || !photoUrl.startsWith("/");
+}
+
+async function syncCowPhotos(
+  db: SeedDb,
+  rows: { id: string; tagNumber: string; photoUrl: string | null }[],
+) {
+  for (const [index, cow] of rows.entries()) {
+    const match = herd.find((item) => item.tagNumber === cow.tagNumber);
+    const nextPhoto = match?.photo ?? (needsCowPhotoFix(cow.photoUrl) ? COW_PHOTOS[index % COW_PHOTOS.length] : null);
+    if (!nextPhoto || nextPhoto === cow.photoUrl) continue;
+    await db
+      .update(cows)
+      .set({ photoUrl: nextPhoto, photoUrls: JSON.stringify([nextPhoto]), updatedAt: nowIso() })
+      .where(eq(cows.id, cow.id));
+  }
+}
 
 function jitter(base: number, day: number, session: MilkSession) {
   const sessionBias = session === "morning" ? 0.35 : session === "evening" ? 0.1 : -0.45;
@@ -137,6 +201,7 @@ export async function seedIfEmpty(db: SeedDb) {
       id: farmId,
       name: "Nyagatare Hills Dairy",
       location: "Nyagatare, Eastern Province, Rwanda",
+      ownerId: userId,
       createdAt: now,
       updatedAt: now,
     });
@@ -179,8 +244,8 @@ export async function seedIfEmpty(db: SeedDb) {
         motherTag: cow.motherTag,
         status: cow.status,
         kraalId: null,
-        photoUrl: null,
-        photoUrls: null,
+        photoUrl: cow.photo,
+        photoUrls: JSON.stringify([cow.photo]),
         notes: cow.notes,
         createdAt: now,
         updatedAt: now,
@@ -217,7 +282,15 @@ export async function seedIfEmpty(db: SeedDb) {
   } else {
     const existingCows = await db.select().from(cows).where(eq(cows.farmId, farmId));
     cowIds = existingCows.map((cow) => ({ id: cow.id, gender: cow.gender, status: cow.status, tagNumber: cow.tagNumber }));
+    await syncCowPhotos(db, existingCows);
+    if (demoUser[0]) {
+      await db.update(farms).set({ ownerId: demoUser[0].id, updatedAt: nowIso() }).where(eq(farms.id, farmId));
+    }
   }
+
+  // Catch cows on any farm that still lack a real cattle photo
+  const everyCow = await db.select().from(cows);
+  await syncCowPhotos(db, everyCow);
 
   await seedOperations(db, farmId, cowIds);
   await ensureOperatorUser(db, farmId);

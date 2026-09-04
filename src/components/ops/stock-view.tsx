@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/forms/field";
 import { Badge } from "@/components/ui/badge";
@@ -118,7 +119,7 @@ export function StockView({ items }: { items: StockItem[] }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div>
         <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">STORE</p>
         <h1 className="text-[28px] tracking-[-1px]">
@@ -168,9 +169,9 @@ export function StockView({ items }: { items: StockItem[] }) {
         <Field label="Expiry date">
           <Input name="expiresOn" type="date" className="h-12 bg-input" />
         </Field>
-        <Button type="submit" disabled={saving} className="h-11 self-end">
-          {saving ? "Saving…" : "Add to store"}
-        </Button>
+        <BusyButton type="submit" busy={saving} busyLabel="Saving…" className="h-11 self-end">
+          Add to store
+        </BusyButton>
       </form>
 
       <div className="overflow-hidden rounded-[15px] border border-border bg-card">
@@ -257,9 +258,9 @@ export function StockView({ items }: { items: StockItem[] }) {
                 placeholder="Treatment, restock, salt for trough…"
               />
             </Field>
-            <Button type="submit" disabled={saving} className="h-11">
-              {saving ? "Saving…" : "Confirm"}
-            </Button>
+            <BusyButton type="submit" busy={saving} busyLabel="Saving…" className="h-11">
+              Confirm
+            </BusyButton>
           </form>
         </DialogContent>
       </Dialog>

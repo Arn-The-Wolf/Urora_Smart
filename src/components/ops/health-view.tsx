@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/forms/field";
@@ -123,7 +124,7 @@ export function HealthView({ events, cows }: { events: HealthEvent[]; cows: Cow[
   }
 
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div>
         <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">HERD WELLNESS</p>
         <h1 className="text-[28px] tracking-[-1px]">
@@ -233,9 +234,9 @@ export function HealthView({ events, cows }: { events: HealthEvent[]; cows: Cow[
         <Field label="Notes" className="md:col-span-2">
           <Textarea name="notes" defaultValue={editing?.notes ?? ""} key={`notes-${editing?.id ?? "new"}`} />
         </Field>
-        <Button type="submit" disabled={saving} className="h-11 md:col-span-2">
-          {saving ? "Saving…" : editing ? "Update health record" : "Save health record"}
-        </Button>
+        <BusyButton type="submit" busy={saving} busyLabel="Saving…" className="h-11 md:col-span-2">
+          {editing ? "Update health record" : "Save health record"}
+        </BusyButton>
       </form>
 
       <div className="overflow-hidden rounded-[15px] border border-border bg-card">

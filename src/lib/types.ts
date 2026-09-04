@@ -36,6 +36,7 @@ export type Farm = {
   location: string | null;
   digestPhone: string | null;
   digestChannel: string | null;
+  ownerId: string | null;
   createdAt: string;
   updatedAt: string;
 };

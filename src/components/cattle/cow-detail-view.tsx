@@ -48,7 +48,7 @@ export function CowDetailView({ cowId }: { cowId: string }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <div className="animate-fade-up">
         {cow.photoUrls?.length || cow.photoUrl ? (
           <div className="mb-4 grid gap-2 sm:grid-cols-2">

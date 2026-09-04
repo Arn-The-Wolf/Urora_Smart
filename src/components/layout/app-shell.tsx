@@ -17,9 +17,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-full md:pl-[246px]">
       <Sidebar />
       <header className="flex items-center justify-between bg-[#173d31] px-5 py-4 text-white md:hidden">
-        <Link href="/" className="flex items-center gap-2 rounded-lg transition hover:opacity-90" aria-label="Urora Smart home">
+        <Link href="/dashboard" className="flex items-center gap-2 rounded-lg transition hover:opacity-90" aria-label="Spring Farms home">
           <UroraMark />
-          <strong className="text-xl tracking-[-1px]">Urora Smart</strong>
+          <strong className="text-xl tracking-[-1px]">Spring Farms</strong>
         </Link>
         <div className="flex items-center gap-2">
           <SyncBadge />
@@ -36,12 +36,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto w-full max-w-[1250px] px-4 pb-24 pt-6 md:px-[42px] md:pb-12 md:pt-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center gap-2 rounded-[10px] border border-[#dfe8df] bg-white px-3.5 py-2 text-sm font-bold text-[#176b45] shadow-sm transition hover:border-[#b9cbbd] hover:bg-[#f6faf5]"
-            aria-label="Urora Smart home"
+            aria-label="Spring Farms home"
           >
             <UroraMark />
-            Urora Smart
+            Spring Farms
           </Link>
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm text-muted-foreground">{farm.name}</span>

@@ -36,7 +36,7 @@ export function PwaInstallBanner() {
           <Download className="size-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <b className="block text-sm">Install Urora Smart</b>
+          <b className="block text-sm">Install Spring Farms</b>
           <p className="text-xs text-muted-foreground">Add to your home screen for faster offline milking.</p>
           <div className="mt-2 flex gap-2">
             <Button

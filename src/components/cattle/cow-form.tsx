@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/forms/field";
@@ -25,6 +26,9 @@ export function CowForm({ cow }: { cow?: Cow }) {
     setSaving(true);
     setError(null);
     try {
+      if (!photoUrls.length) {
+        throw new Error("Every cow needs at least one photo — upload the animal’s image");
+      }
       const saved = await saveCow(
         {
           tagNumber: String(formData.get("tagNumber") ?? ""),
@@ -114,19 +118,22 @@ export function CowForm({ cow }: { cow?: Cow }) {
       </div>
 
       <MultiPhotoUpload
-        label="Cow photos"
+        label="Cow photo (required)"
         values={photoUrls}
         onChange={setPhotoUrls}
-        hint="Add ear tag, side view, and any other photos — create, replace, or remove anytime."
+        hint="Upload this animal’s own photo — every cow must have at least one image."
       />
+      {!photoUrls.length ? (
+        <p className="text-xs font-semibold text-destructive">Add a photo before saving this cow.</p>
+      ) : null}
 
       <Field label="Notes" htmlFor="notes">
         <Textarea id="notes" name="notes" defaultValue={cow?.notes ?? ""} rows={4} placeholder="Temperament, history, anything useful…" />
       </Field>
 
-      <Button type="submit" disabled={saving} className="h-12 w-full text-base">
-        {saving ? "Saving…" : cow ? "Save changes" : "Add to herd"}
-      </Button>
+      <BusyButton type="submit" busy={saving} busyLabel="Saving…" disabled={!photoUrls.length} className="h-12 w-full text-base">
+        {cow ? "Save changes" : "Add to herd"}
+      </BusyButton>
     </form>
   );
 }

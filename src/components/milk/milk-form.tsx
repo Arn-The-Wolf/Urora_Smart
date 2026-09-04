@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/forms/field";
 import { useFarmData } from "@/lib/offline/provider";
@@ -127,9 +128,9 @@ export function MilkForm() {
       </Field>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      <Button type="submit" disabled={saving || milkers.length === 0} className="h-12 w-full text-base">
-        {saving ? "Saving…" : "Save milking"}
-      </Button>
+      <BusyButton type="submit" busy={saving} busyLabel="Saving…" disabled={milkers.length === 0} className="h-12 w-full text-base">
+        Save milking
+      </BusyButton>
     </form>
   );
 }

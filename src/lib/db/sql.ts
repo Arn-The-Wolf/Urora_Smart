@@ -77,6 +77,7 @@ export const SCHEMA_STATEMENTS = [
   `ALTER TABLE health_events ADD COLUMN IF NOT EXISTS photo_urls TEXT`,
   `ALTER TABLE farms ADD COLUMN IF NOT EXISTS digest_phone TEXT`,
   `ALTER TABLE farms ADD COLUMN IF NOT EXISTS digest_channel TEXT`,
+  `ALTER TABLE farms ADD COLUMN IF NOT EXISTS owner_id TEXT`,
   `CREATE TABLE IF NOT EXISTS kraals (
       id TEXT PRIMARY KEY,
       farm_id TEXT NOT NULL REFERENCES farms(id),

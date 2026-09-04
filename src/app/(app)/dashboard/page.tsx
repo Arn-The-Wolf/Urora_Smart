@@ -5,16 +5,20 @@ import { listLowStock } from "@/modules/inventory/service";
 import { nextWashDue } from "@/modules/wash/service";
 import { listOpenTasks } from "@/modules/tasks/service";
 import { alertSummary, getFarmAlerts } from "@/modules/alerts/service";
+import { listOwnedFarms } from "@/modules/users/service";
+import { canViewOwnerInsights } from "@/lib/roles";
 
 export default async function DashboardPage() {
   const session = await getSession();
   if (!session) return null;
-  const [sick, lowStock, washDue, openTasks, alerts] = await Promise.all([
+  const owner = canViewOwnerInsights(session.user.role);
+  const [sick, lowStock, washDue, openTasks, alerts, ownedFarms] = await Promise.all([
     listSickAnimals(session.farm.id),
     listLowStock(session.farm.id),
     nextWashDue(session.farm.id),
     listOpenTasks(session.farm.id),
     getFarmAlerts(session.farm.id),
+    owner ? listOwnedFarms(session.user.id) : Promise.resolve([]),
   ]);
   return (
     <DashboardView
@@ -24,6 +28,7 @@ export default async function DashboardPage() {
       openTasks={openTasks}
       alertCount={alertSummary(alerts).total}
       criticalAlerts={alertSummary(alerts).critical}
+      ownedFarms={ownedFarms}
     />
   );
 }

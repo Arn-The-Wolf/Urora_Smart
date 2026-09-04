@@ -7,7 +7,7 @@ export default async function LoginPage() {
   const session = await getSession();
   if (session) redirect("/dashboard");
   return (
-    <AuthFrame title="Welcome back." subtitle="Sign in as farm owner or farm operator. Owners see money and reports; operators keep full daily herd tools.">
+    <AuthFrame title="Welcome back." subtitle="Sign in as farm owner or farm operator. Owners see the overview; operators keep full daily herd tools.">
       <LoginForm />
     </AuthFrame>
   );

@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/forms/field";
@@ -44,7 +45,7 @@ export function WashView({ washes }: { washes: WashRecord[] }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div>
         <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">TICK & HYGIENE</p>
         <h1 className="text-[28px] tracking-[-1px]">Wash in chemically treated water</h1>
@@ -70,7 +71,7 @@ export function WashView({ washes }: { washes: WashRecord[] }) {
         <Field label="Next due"><Input name="nextDue" type="date" defaultValue={addDays(todayInKigali(), 7)} /></Field>
         <Field label="Animals"><Input name="animalScope" defaultValue="herd" placeholder="herd, or tag numbers" /></Field>
         <Field label="Notes" className="md:col-span-2"><Textarea name="notes" placeholder="Weather, missed animals, drum rinsed after use…" /></Field>
-        <Button type="submit" disabled={saving} className="h-11 md:col-span-2">{saving ? "Saving…" : "Save wash record"}</Button>
+        <BusyButton type="submit" busy={saving} busyLabel="Saving…" className="h-11 md:col-span-2">Save wash record</BusyButton>
       </form>
 
       <div className="overflow-hidden rounded-[15px] border border-border bg-card">

@@ -1,4 +1,4 @@
-# Urora Smart
+# Spring Farms
 
 Mobile-first farm workspace for cattle, milk, sick animals, vet stock, chemically treated washes, and the daily schedule.
 
@@ -9,13 +9,13 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) — boots to login.
 
 Demo accounts (password `farm1234` for both):
 
 | Role | Email | Can do |
 | --- | --- | --- |
-| Farm owner | `farmer@urora.farm` | Full ops + breeding + money + reports + activity |
+| Farm owner | `farmer@urora.farm` | Full ops + breeding + money + activity |
 | Farm operator | `operator@urora.farm` | Day-to-day herd, milk, stock, washes |
 
 ## What is live

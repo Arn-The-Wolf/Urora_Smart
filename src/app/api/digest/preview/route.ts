@@ -14,7 +14,7 @@ export async function GET() {
     ]);
     const summary = alertSummary(alerts);
     const message = [
-      `Urora Smart · ${session.farm.name}`,
+      `Spring Farms · ${session.farm.name}`,
       `Milk today: ${milk.todayLiters.toFixed(1)} L`,
       `Alerts: ${summary.total} (${summary.critical} critical)`,
       `Month net: ${finance.net.toLocaleString()} RWF`,

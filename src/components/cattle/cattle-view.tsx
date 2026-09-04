@@ -33,7 +33,7 @@ export function CattleView() {
   }, [cows, query, status]);
 
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div className="flex items-end justify-between gap-3 animate-fade-up">
         <div>
           <h1 className="font-heading text-3xl tracking-tight">Herd</h1>

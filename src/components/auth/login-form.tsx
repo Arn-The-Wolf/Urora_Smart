@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/auth/password-input";
 import { Field } from "@/components/forms/field";
@@ -37,7 +37,7 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4 animate-fade-up">
       <Field label="Email" htmlFor="email">
         <Input
           id="email"
@@ -60,9 +60,9 @@ export function LoginForm() {
         />
       </Field>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button type="submit" disabled={loading} className="h-12 w-full text-base">
-        {loading ? "Signing in…" : "Sign in"}
-      </Button>
+      <BusyButton type="submit" busy={loading} busyLabel="Signing in…" className="h-12 w-full text-base">
+        Sign in
+      </BusyButton>
       <div className="grid gap-2">
         <button
           type="button"
@@ -73,7 +73,7 @@ export function LoginForm() {
           }}
         >
           <span className="font-semibold text-foreground">Demo · Farm owner</span>
-          <span className="mt-0.5 block text-muted-foreground">farmer@urora.farm · farm1234 · reports</span>
+          <span className="mt-0.5 block text-muted-foreground">farmer@urora.farm · farm1234 · owner</span>
         </button>
         <button
           type="button"

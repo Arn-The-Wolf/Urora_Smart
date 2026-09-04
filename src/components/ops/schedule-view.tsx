@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/forms/field";
 import { todayInKigali } from "@/lib/dates";
@@ -44,7 +45,7 @@ export function ScheduleView({ tasks }: { tasks: FarmTask[] }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="page-enter space-y-5">
       <div>
         <p className="text-[10px] font-bold tracking-[1.5px] text-[#7a9184]">DAILY OPERATIONS</p>
         <h1 className="text-[28px] tracking-[-1px]">Schedule <span className="ml-2 rounded-full bg-[#dfeee0] px-2 py-0.5 text-xs text-[#3a7552]">{done}/{tasks.length}</span></h1>
@@ -66,7 +67,7 @@ export function ScheduleView({ tasks }: { tasks: FarmTask[] }) {
         <Field label="Due date"><Input name="dueDate" type="date" required defaultValue={todayInKigali()} className="h-12 bg-input" /></Field>
         <Field label="Time"><Input name="dueTime" type="time" className="h-12 bg-input" /></Field>
         <Field label="Notes" className="md:col-span-2"><Input name="notes" placeholder="Optional detail" className="h-12 bg-input" /></Field>
-        <Button type="submit" disabled={saving} className="h-11 self-end md:col-span-2">{saving ? "Saving…" : "Add task"}</Button>
+        <BusyButton type="submit" busy={saving} busyLabel="Saving…" className="h-11 self-end md:col-span-2">Add task</BusyButton>
       </form>
 
       <div className="rounded-[15px] border border-border bg-card px-5">

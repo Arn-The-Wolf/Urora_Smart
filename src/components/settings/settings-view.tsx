@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { BusyButton } from "@/components/loading/busy-button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/forms/field";
 import { useFarmData } from "@/lib/offline/provider";
 import { canManageFarm, roleLabel } from "@/lib/roles";
+import type { Farm } from "@/lib/types";
 import type { Kraal } from "@/modules/kraals/service";
 
 export function SettingsView({ kraals }: { kraals: Kraal[] }) {
@@ -20,6 +22,18 @@ export function SettingsView({ kraals }: { kraals: Kraal[] }) {
   const [digestChannel, setDigestChannel] = useState(farm.digestChannel ?? "none");
   const [kraalName, setKraalName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [ownedFarms, setOwnedFarms] = useState<Farm[]>([]);
+  const [newFarmName, setNewFarmName] = useState("");
+  const [newFarmLocation, setNewFarmLocation] = useState("");
+  const [farmBusy, setFarmBusy] = useState(false);
+
+  useEffect(() => {
+    if (!owner) return;
+    void fetch("/api/farms")
+      .then((res) => res.json())
+      .then((data: { farms?: Farm[] }) => setOwnedFarms(data.farms ?? []))
+      .catch(() => setOwnedFarms([]));
+  }, [owner, farm.id]);
 
   async function onSave(event: FormEvent) {
     event.preventDefault();
@@ -65,6 +79,51 @@ export function SettingsView({ kraals }: { kraals: Kraal[] }) {
     router.refresh();
   }
 
+  async function createFarm(event: FormEvent) {
+    event.preventDefault();
+    if (!owner || !newFarmName.trim()) return;
+    setFarmBusy(true);
+    try {
+      const response = await fetch("/api/farms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newFarmName, location: newFarmLocation || null }),
+      });
+      const data = (await response.json()) as { error?: string; farm?: Farm };
+      if (!response.ok) throw new Error(data.error ?? "Could not create farm");
+      toast.success(`Switched to ${data.farm?.name ?? "new farm"}`);
+      setNewFarmName("");
+      setNewFarmLocation("");
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create farm");
+    } finally {
+      setFarmBusy(false);
+    }
+  }
+
+  async function switchFarm(farmId: string) {
+    if (!owner || farmId === farm.id) return;
+    setFarmBusy(true);
+    try {
+      const response = await fetch("/api/farms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "switch", farmId }),
+      });
+      const data = (await response.json()) as { error?: string; farm?: Farm };
+      if (!response.ok) throw new Error(data.error ?? "Could not switch farm");
+      toast.success(`Now viewing ${data.farm?.name ?? "farm"}`);
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not switch farm");
+    } finally {
+      setFarmBusy(false);
+    }
+  }
+
   async function onLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
@@ -72,12 +131,12 @@ export function SettingsView({ kraals }: { kraals: Kraal[] }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <div>
         <h1 className="font-heading text-3xl tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
           {owner
-            ? "Farm profile, kraals, digests, and sync."
+            ? "Farm profile, create another farm, kraals, digests, and sync."
             : "Your account and sync. Farm profile is managed by the owner."}
         </p>
       </div>
@@ -114,12 +173,9 @@ export function SettingsView({ kraals }: { kraals: Kraal[] }) {
               <option value="whatsapp">WhatsApp (ready when gateway connected)</option>
             </select>
           </Field>
-          <p className="text-xs text-muted-foreground">
-            Digests will send daily milk totals and critical alerts. Wire a provider (Africa’s Talking / Twilio) with env keys to go live.
-          </p>
-          <Button type="submit" disabled={saving} className="h-11 w-full">
-            {saving ? "Saving…" : "Save farm"}
-          </Button>
+          <BusyButton type="submit" busy={saving} busyLabel="Saving…" className="h-11 w-full">
+            Save farm
+          </BusyButton>
         </form>
       ) : (
         <section className="space-y-2 rounded-3xl bg-card p-5 ring-1 ring-foreground/8">
@@ -129,6 +185,51 @@ export function SettingsView({ kraals }: { kraals: Kraal[] }) {
           <p className="pt-2 text-xs text-muted-foreground">Ask the farm owner to change farm details or kraals.</p>
         </section>
       )}
+
+      {owner ? (
+        <section className="space-y-3 rounded-3xl bg-card p-5 ring-1 ring-foreground/8">
+          <h2 className="text-sm font-semibold">Your farms</h2>
+          <p className="text-xs text-muted-foreground">
+            Owners can create another farm and switch between them. Operators stay on the farm they were invited to.
+          </p>
+          <ul className="space-y-2">
+            {ownedFarms.map((item) => (
+              <li key={item.id} className="flex items-center justify-between gap-2 rounded-xl border border-border px-3 py-2 text-sm">
+                <div className="min-w-0">
+                  <b className="block truncate">{item.name}</b>
+                  <span className="text-xs text-muted-foreground">{item.location ?? "No location"}</span>
+                </div>
+                {item.id === farm.id ? (
+                  <span className="text-xs font-bold text-primary">Active</span>
+                ) : (
+                  <BusyButton type="button" size="sm" variant="outline" busy={farmBusy} busyLabel="…" onClick={() => void switchFarm(item.id)}>
+                    Switch
+                  </BusyButton>
+                )}
+              </li>
+            ))}
+          </ul>
+          <form onSubmit={createFarm} className="space-y-2 border-t border-border pt-3">
+            <p className="text-xs font-semibold">Create another farm</p>
+            <Input
+              value={newFarmName}
+              onChange={(e) => setNewFarmName(e.target.value)}
+              placeholder="New farm name"
+              className="h-11"
+              required
+            />
+            <Input
+              value={newFarmLocation}
+              onChange={(e) => setNewFarmLocation(e.target.value)}
+              placeholder="Location (optional)"
+              className="h-11"
+            />
+            <BusyButton type="submit" busy={farmBusy} busyLabel="Working…" disabled={!newFarmName.trim()} className="h-11 w-full">
+              Create farm & switch
+            </BusyButton>
+          </form>
+        </section>
+      ) : null}
 
       <section className="space-y-3 rounded-3xl bg-card p-5 ring-1 ring-foreground/8">
         <h2 className="text-sm font-semibold">Kraals / sites</h2>
