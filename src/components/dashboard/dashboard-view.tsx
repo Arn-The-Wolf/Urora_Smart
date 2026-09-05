@@ -50,23 +50,18 @@ export function DashboardView({
     const weekMax = Math.max(...summary.last7Days.map((d) => d.liters), 1);
 
     return (
-      <div className="page-enter space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="live-pill">
-              <span /> OWNER
-            </p>
-            <h1 className="mt-2 text-[28px] tracking-[-1px] text-[#18382d]">Good day, {firstName}</h1>
-            <p className="text-sm text-muted-foreground">
-              {formatShortDate(today)} · {farm.name}
-            </p>
-          </div>
-          <Link href="/milk/new" className={cn(buttonVariants(), "h-11 rounded-[9px] px-4 font-bold")}>
-            <Plus className="size-4" /> Log milking
-          </Link>
+      <div className="page-enter space-y-8">
+        <div>
+          <p className="live-pill">
+            <span /> OWNER
+          </p>
+          <h1 className="mt-3 text-[28px] tracking-[-1px] text-[#18382d]">Good day, {firstName}</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {formatShortDate(today)} · {farm.name}
+          </p>
         </div>
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Kpi
             icon={<Droplets className="size-4" />}
             label="Milk today"
@@ -87,13 +82,13 @@ export function DashboardView({
           />
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-          <div className="rounded-[16px] border border-border bg-card p-5 shadow-[0_4px_18px_#193d2a08]">
+        <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+          <div className="rounded-[16px] border border-border bg-card p-6 shadow-[0_4px_18px_#193d2a08]">
             <div className="flex items-baseline justify-between gap-2">
               <h2 className="text-[15px] font-semibold">Milk · 7 days</h2>
               <span className="text-xs text-muted-foreground">{formatLiters(summary.weekLiters)} this week</span>
             </div>
-            <div className="mt-6 flex h-44 items-end gap-2.5">
+            <div className="mt-7 flex h-44 items-end gap-2.5">
               {summary.last7Days.map((day) => {
                 const h = Math.max(10, (day.liters / weekMax) * 100);
                 return (
@@ -116,9 +111,9 @@ export function DashboardView({
             </div>
           </div>
 
-          <div className="rounded-[16px] border border-border bg-card p-5 shadow-[0_4px_18px_#193d2a08]">
+          <div className="rounded-[16px] border border-border bg-card p-6 shadow-[0_4px_18px_#193d2a08]">
             <h2 className="text-[15px] font-semibold">Cows by status</h2>
-            <div className="mt-5 flex items-center gap-5">
+            <div className="mt-6 flex items-center gap-5">
               <div
                 className="relative size-28 shrink-0 rounded-full"
                 style={{
@@ -148,14 +143,14 @@ export function DashboardView({
           </div>
         </section>
 
-        <section className="rounded-[16px] border border-border bg-card p-5 shadow-[0_4px_18px_#193d2a08]">
+        <section className="rounded-[16px] border border-border bg-card p-6 shadow-[0_4px_18px_#193d2a08]">
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="text-[15px] font-semibold">Your farms</h2>
             <Link href="/settings" className="text-xs font-semibold text-primary">
               Manage
             </Link>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {(ownedFarms.length ? ownedFarms : [farm]).map((item) => {
               const active = item.id === farm.id;
               return (

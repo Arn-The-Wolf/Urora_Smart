@@ -58,12 +58,26 @@ export function Sidebar() {
     .toUpperCase();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[246px] flex-col bg-[#173d31] px-3 pt-4 pb-4 text-[#d8e6dc] md:flex">
-      <Link href="/dashboard" className="shrink-0 rounded-lg px-1 transition hover:opacity-90" aria-label="Spring Farms home">
+    <aside
+      className={cn(
+        "fixed inset-y-0 left-0 z-30 hidden w-[246px] flex-col bg-[#173d31] text-[#d8e6dc] md:flex",
+        owner ? "px-3.5 pt-5 pb-5" : "px-3 pt-4 pb-4",
+      )}
+    >
+      <Link
+        href="/dashboard"
+        className={cn("shrink-0 rounded-lg px-1 transition hover:opacity-90", owner && "px-1.5")}
+        aria-label="Spring Farms home"
+      >
         <UroraWordmark light compact />
       </Link>
 
-      <div className="mt-3 mb-2 flex items-center gap-2 rounded-[10px] border border-[#35604d] px-2 py-2">
+      <div
+        className={cn(
+          "flex items-center gap-2 rounded-[10px] border border-[#35604d]",
+          owner ? "mt-8 mb-1 px-3 py-3" : "mt-3 mb-2 px-2 py-2",
+        )}
+      >
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#e2b86f] text-[10px] font-bold text-[#294238]">
           {initials}
         </span>
@@ -75,11 +89,11 @@ export function Sidebar() {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
-        <p className="mx-2 mb-1 text-[9px] font-bold tracking-[1.4px] text-[#7da28f]">
+      <div className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1", owner ? "mt-8" : "mt-0")}>
+        <p className={cn("mx-2 font-bold tracking-[1.4px] text-[#7da28f]", owner ? "mb-3 text-[10px]" : "mb-1 text-[9px]")}>
           {owner ? "OWNER" : "YOUR WORK"}
         </p>
-        <nav className="grid">
+        <nav className={cn("grid", owner && "gap-1")}>
           {links.map((link) => {
             const Icon = link.icon;
             const active =
@@ -89,7 +103,8 @@ export function Sidebar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "my-0.5 flex items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-[13px]",
+                  "flex items-center gap-2.5 rounded-[9px] text-[13px]",
+                  owner ? "px-3 py-2.5" : "my-0.5 px-2.5 py-2",
                   active
                     ? owner
                       ? "bg-[#2b5d4a] text-white shadow-[inset_3px_0_#e2b86f]"
@@ -107,7 +122,7 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <div className="mt-2 shrink-0 border-t border-[#35604d] pt-2">
+      <div className={cn("shrink-0 border-t border-[#35604d]", owner ? "mt-6 pt-4" : "mt-2 pt-2")}>
         <div className="mb-2 px-1">
           <SyncBadge />
         </div>
